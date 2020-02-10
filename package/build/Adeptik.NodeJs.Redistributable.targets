@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+
+<!-- Downloads NodeJs distribution to use in project -->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <!-- NodeJs distribution urls and cache directories, state etc. -->
+  <PropertyGroup>
+    <NodeJsDistQualifiedName>node-v$(NodeJsDistVersion)-$(NodeJsDistOS)-$(NodeJsDistOSArchitecture)</NodeJsDistQualifiedName>
+
+    <NodeJsDistArchiveExtension>tar.gz</NodeJsDistArchiveExtension>
+    <NodeJsDistArchiveExtension Condition=" '$(NodeJsDistOS)' == 'win' ">zip</NodeJsDistArchiveExtension>
+    
+    <NodeJsDistHashSumsFileUrl>$(NodeJsReleaseDownloadUrl)/v$(NodeJsDistVersion)/SHASUMS256.txt</NodeJsDistHashSumsFileUrl>
+    <NodeJsDistArchiveUrl>$(NodeJsReleaseDownloadUrl)/v$(NodeJsDistVersion)/$(NodeJsDistQualifiedName).$(NodeJsDistArchiveExtension)</NodeJsDistArchiveUrl>
+
+    <NodeJsDistPath>$([MSBuild]::NormalizeDirectory($(NodeJsDistTempPath),$(NodeJsDistQualifiedName)))</NodeJsDistPath>
+    <NodeJsDistLockFile>$([MSBuild]::NormalizePath($(NodeJsDistTempPath),'$(NodeJsDistQualifiedName).lock'))</NodeJsDistLockFile>
+  </PropertyGroup>
+
+  <Target Name="_FindCachedNodeJsDist"
+          Returns="$(_NodeJsDistCacheFound)">
+
+    <Error Condition="'$(NodeJsDistVersion)' == ''"
+           Text="NodeJs distribution version is not specified." />
+
+    <PropertyGroup>
+      <_NodeJsDistCacheFound>False</_NodeJsDistCacheFound>
+    </PropertyGroup>
+    <ItemGroup>
+      <_NodeJsDistVersionMarker Remove="*" />
+    </ItemGroup>
+
+    <ReadLinesFromFile File="$(NodeJsDistLockFile)"
+                       Condition="Exists($(NodeJsDistLockFile))">
+      <Output TaskParameter="Lines" ItemName="_NodeJsDistVersionMarker" />
+    </ReadLinesFromFile>
+
+    <PropertyGroup Condition="@(_NodeJsDistVersionMarker->Count()) == 1 and '@(_NodeJsDistVersionMarker)' == '$(NodeJsDistVersion)'">
+      <_NodeJsDistCacheFound>True</_NodeJsDistCacheFound>
+    </PropertyGroup>
+
+    <Message Text="NodeJs v$(NodeJsDistVersion) distribution cache not found."
+             Condition="!$(_NodeJsDistCacheFound)" />
+    <Message Text="NodeJs v$(NodeJsDistVersion) distribution cache found."
+             Condition="$(_NodeJsDistCacheFound)" />
+
+  </Target>
+
+  <Target Name="_DownloadNodeJsDistHashSumsFile"
+          Returns="@(_NodeJsDistHashSum)">
+
+    <DownloadFile SourceUrl="$(NodeJsDistHashSumsFileUrl)"
+                  DestinationFolder="$(NodeJsDistTempPath)"
+                  DestinationFileName="node-v$(NodeJsDistVersion)-SHASUMS256.txt"
+                  SkipUnchangedFiles="True">
+      <Output TaskParameter="DownloadedFile" PropertyName="NodeJsDistHashSumsFile" />
+    </DownloadFile>
+
+    <ReadLinesFromFile File="$(NodeJsDistHashSumsFile)">
+      <Output TaskParameter="Lines" ItemName="_NodeJsDistHashSum" />
+    </ReadLinesFromFile>
+
+  </Target>
+
+  <Target Name="_DownloadNodeJsDistArchive"
+          Returns="$(_NodeJsDistArchive)"
+          DependsOnTargets="_DownloadNodeJsDistHashSumsFile">
+
+    <DownloadFile SourceUrl="$(NodeJsDistArchiveUrl)"
+                  DestinationFolder="$(NodeJsDistTempPath)"
+                  DestinationFilename="$(NodeJsDistQualifiedName).$(NodeJsDistArchiveExtension)"
+                  SkipUnchangedFiles="True">
+      <Output TaskParameter="DownloadedFile" PropertyName="_NodeJsDistArchive" />
+    </DownloadFile>
+
+    <GetFileHash Files="$(_NodeJsDistArchive)">
+      <Output TaskParameter="Hash" PropertyName="_NodeJsDistArchiveHash" />
+    </GetFileHash>
+
+    <ItemGroup>
+      <_NodeJsDistHashVerified
+        Include="@(_NodeJsDistHashSum)"
+        Condition="'%(_NodeJsDistHashSum.Identity)' == '$(_NodeJsDistArchiveHash.ToLower())  $(NodeJsDistQualifiedName).$(NodeJsDistArchiveExtension)'" />
+    </ItemGroup>
+
+    <Error Condition="@(_NodeJsDistHashVerified->Count()) == 0"
+           Text="NodeJs dist hash validation failed." />
+
+  </Target>
+
+  <Target Name="_UpdateNodeJsDistCache"
+          DependsOnTargets="_DownloadNodeJsDistArchive"
+          Condition="!$(_NodeJsDistCacheFound)">
+
+    <RemoveDir Directories="$(NodeJsDistPath)"
+               Condition="Exists($(NodeJsDistPath))"/>
+
+    <Message Text="Extracting file '$(_NodeJsDistArchive)' to the '$(NodeJsDistTempPath)' folder"/>
+    <Adeptik.ExtractZipFileToDirectoryWorkaround
+      Condition="'$(NodeJsDistOS)' == 'win'"
+      ZipFile="$(_NodeJsDistArchive)"
+      OutputFolder="$(NodeJsDistTempPath)" />
+    <Exec Condition="'$(NodeJsDistOS)' == 'linux'"
+          Command="tar -xzf $(_NodeJsDistArchive)"
+          WorkingDirectory="$(NodeJsDistTempPath)"
+          ConsoleToMSBuild="True" />
+
+    <Message Text="Writing lock file $(NodeJsDistLockFile)" />
+    <Delete Files="$(NodeJsDistLockFile)"
+            Condition="Exists($(NodeJsDistLockFile))" />
+    <WriteLinesToFile File="$(NodeJsDistLockFile)"
+                      Lines="$(NodeJsDistVersion)"
+                      Encoding="Unicode" />
+  </Target>
+
+  <Target Name="InstallNodeJs"
+          Returns="$(NodeJsExecutablePath)">
+
+    <Error Condition=" '$(NodeJsDistVersion)' == ''"
+           Text="NodeJs version is not specified. Set 'NodeJsDistVersion' property." />
+    <Error Condition=" '$(NodeJsExecutablePath)' != '' "
+           Text="NodeJs executable path is already defined. Are you already using a different NodeJs distribution?" />
+
+    <PropertyGroup>
+      <NodeJsExecutablePath>$(NodeJsDistPath)</NodeJsExecutablePath>
+      <NodeJsExecutablePath Condition="'$(NodeJsDistOS)' != 'win'">$([MSBuild]::NormalizeDirectory($(NodeJsExecutablePath),'bin'))</NodeJsExecutablePath>
+    </PropertyGroup>
+
+    <CallTarget Targets="_FindCachedNodeJsDist;_UpdateNodeJsDistCache" />
+
+  </Target>
+
+  <UsingTask TaskName="Adeptik.ExtractZipFileToDirectoryWorkaround"
+             TaskFactory="CodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <ZipFile ParameterType="System.String" Required="true" />
+      <OutputFolder ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.IO.Compression.FileSystem" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        System.IO.Compression.ZipFile.ExtractToDirectory(ZipFile, OutputFolder);
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+</Project>
