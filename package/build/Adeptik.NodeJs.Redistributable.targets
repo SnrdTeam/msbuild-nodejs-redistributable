@@ -96,7 +96,7 @@
                Condition="Exists($(NodeJsDistPath))"/>
 
     <Message Text="Extracting file '$(_NodeJsDistArchive)' to the '$(NodeJsDistTempPath)' folder"/>
-    <Adeptik.ExtractZipFileToDirectoryWorkaround
+    <AdeptikExtractZipFileToDirectoryWorkaround
       Condition="'$(NodeJsDistOS)' == 'win'"
       ZipFile="$(_NodeJsDistArchive)"
       OutputFolder="$(NodeJsDistTempPath)" />
@@ -130,7 +130,7 @@
 
   </Target>
 
-  <UsingTask TaskName="Adeptik.ExtractZipFileToDirectoryWorkaround"
+  <UsingTask TaskName="AdeptikExtractZipFileToDirectoryWorkaround"
              TaskFactory="CodeTaskFactory"
              AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
