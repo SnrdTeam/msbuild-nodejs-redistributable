@@ -2,6 +2,9 @@
 
 MSBuild NodeJs installation target.
 
+![Build Status](https://tfs.adeptik.com/Adeptik/_apis/public/build/definitions/5f6da651-409b-4516-b0c6-16518d60e6e9/137/badge)
+![Nuget Package](https://img.shields.io/nuget/vpre/Adeptik.NodeJs.Redistributable)
+
 ## Usage
 
 To aquire required version of NodeJs follow steps:
