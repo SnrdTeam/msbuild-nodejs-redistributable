@@ -25,8 +25,7 @@ To aquire required version of NodeJs follow steps:
 3. Now you can get full path to the downloaded distribution in your target by setting target's `DependsOn` attribute to `InstallNodeJs` and reading `$(NodeJsExecutablePath)` property:
 
     ```xml
-    <Target Name="YourTarget"
-            DependsOnTargets="InstallNodeJs">
+    <Target Name="YourTarget" DependsOnTargets="InstallNodeJs">
         <Message Text="Using $(NodeJsExecutablePath)" />
     </Target>
     ```
