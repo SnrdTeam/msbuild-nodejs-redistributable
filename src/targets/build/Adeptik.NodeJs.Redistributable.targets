@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+
+<!-- Downloads NodeJs distribution to use in project -->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Download NodeJS distrib & unpack -->
+  <Target Name="InstallNodeJs" Returns="$(NodeJsExecutablePath)">
+    <Error Text="NodeJsVersion variable not set." Condition="'$(NodeJsVersion)' == ''" />
+    <InstallNodeJs NodeJsVersion="$(NodeJsVersion)">
+      <Output TaskParameter="NodeJsPath" PropertyName="NodeJsExecutablePath"></Output>
+    </InstallNodeJs>
+    <Message Text="Working $(NodeJsExecutablePath)" Importance="High"></Message>
+  </Target>
+
+  <!-- Install yarn using NPM -->
+  <Target Name="InstallYarn" DependsOnTargets="InstallNodeJs">
+    <Exec Command="$(NodeJsExecutablePath)npm install yarn"
+          WorkingDirectory="$(NodeJsExecutablePath)"
+          ConsoleToMSBuild="True"
+          Condition="!Exists('$(NodeJsExecutablePath)yarn.cmd')"
+    />
+  </Target>
+
+  <!-- Install project packages using yarn -->
+  <Target Name="YarnInstall" DependsOnTargets="InstallYarn">
+    <Exec Command="$(NodeJsExecutablePath)yarn install"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ConsoleToMSBuild="True" />
+  </Target>
+
+  <!-- Install project packages using yarn -->
+  <Target Name="YarnRun" DependsOnTargets="YarnInstall"  BeforeTargets="CoreCompile" Condition="'$(YarnBuildCommand)' != '' ">
+    <Exec Command="$(NodeJsExecutablePath)yarn $(YarnBuildCommand)"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ConsoleToMSBuild="True" />
+  </Target>
+
+  <!--Setup yarn build dependences-->
+  <PropertyGroup>
+    <PrepareForBuildDependsOn>YarnRun;$(PrepareForBuildDependsOn)</PrepareForBuildDependsOn>
+    <CoreCompileDependsOn>$(CoreCompileDependsOn);YarnRun</CoreCompileDependsOn>
+  </PropertyGroup>
+
+</Project>

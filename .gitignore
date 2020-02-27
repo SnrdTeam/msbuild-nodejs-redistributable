@@ -3,3 +3,9 @@
 ################################################################################
 
 /src/bin/Debug
+/src/obj
+/.vs/Adeptik.NodeJs.Redistributable/DesignTimeBuild
+/.vs/Adeptik.NodeJs.Redistributable/v16
+/test/TestWebApp/bin/Debug/netcoreapp3.1
+/test/TestWebApp/node_modules
+/test/TestWebApp/obj
