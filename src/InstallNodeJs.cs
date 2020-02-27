@@ -135,8 +135,10 @@ namespace Adeptik.NodeJs.Redistributable
         {
             Log.LogMessage($"Downloading NodeJS from {GetDistribUrl()}");
 
-            using var distribFile = new FileStream(GetDistribFilePath(), FileMode.Create, FileAccess.Write, FileShare.None);
-            DownloadFile(GetDistribUrl(), distribFile);
+            using (var distribFile = new FileStream(GetDistribFilePath(), FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                DownloadFile(GetDistribUrl(), distribFile);
+            }
 
             if (!NodeJSDownloaded())
                 throw new Exception("Downloaded NodeJS distrib is corrupted.");
