@@ -98,7 +98,7 @@ namespace Adeptik.NodeJs.Redistributable
             }
             catch (Exception e)
             {
-                Log.LogError($"NodeJs installing failed. {e.Message}");
+                Log.LogError($"NodeJs installing failed. {e.Message}. {e.StackTrace}");
             }
 
             return !Log.HasLoggedErrors;
