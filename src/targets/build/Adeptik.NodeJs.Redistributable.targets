@@ -13,10 +13,9 @@
 
   <!-- Install yarn using NPM -->
   <Target Name="InstallYarn" DependsOnTargets="InstallNodeJs">
-    <Exec Command="$(NodeJsExecutablePath)npm install yarn"
+    <Exec Command="$(NodeJsExecutablePath)npm install yarn@$(YarnVersion)"
           WorkingDirectory="$(NodeJsExecutablePath)"
           ConsoleToMSBuild="True"
-          Condition="!Exists('$(NodeJsExecutablePath)yarn.cmd')"
     />
   </Target>
 
@@ -27,7 +26,7 @@
           ConsoleToMSBuild="True" />
   </Target>
 
-  <!-- Install project packages using yarn -->
+  <!-- Run yarn command if specified -->
   <Target Name="YarnRun" DependsOnTargets="YarnInstall"  BeforeTargets="CoreCompile" Condition="'$(YarnBuildCommand)' != '' ">
     <Exec Command="$(NodeJsExecutablePath)yarn $(YarnBuildCommand)"
           WorkingDirectory="$(MSBuildProjectDirectory)"

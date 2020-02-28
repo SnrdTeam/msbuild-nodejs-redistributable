@@ -3,7 +3,9 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- Properties -->
   <PropertyGroup>
+    <NodeJsDistTempPath>$(MSBuildThisFileDirectory)/../node</NodeJsDistTempPath>
     <NodeJsVersion></NodeJsVersion>
+    <YarnVersion>latest</YarnVersion>
     <NodeJsExecutablePath></NodeJsExecutablePath>
     <YarnBuildCommand></YarnBuildCommand>
   </PropertyGroup>
