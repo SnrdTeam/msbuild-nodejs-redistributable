@@ -4,7 +4,7 @@
     <TargetFramework>netstandard1.5</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <SemanticVersion>2.0.0</SemanticVersion>
-    <PreReleaseLabel>Preview3</PreReleaseLabel>
+    <PreReleaseLabel>Preview4</PreReleaseLabel>
   </PropertyGroup>
 
   <PropertyGroup>
