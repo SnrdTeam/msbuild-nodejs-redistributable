@@ -5,7 +5,7 @@
   <!-- Download NodeJS distrib & unpack -->
   <Target Name="InstallNodeJs" Returns="$(NodeJsExecutablePath)">
     <Error Text="NodeJsVersion variable not set." Condition="'$(NodeJsVersion)' == ''" />
-    <InstallNodeJs NodeJsVersion="$(NodeJsVersion)">
+    <InstallNodeJs NodeJsVersion="$(NodeJsVersion)" WorkingDirectoryPath="$(NodeJsDistTempPath)">
       <Output TaskParameter="NodeJsPath" PropertyName="NodeJsExecutablePath"></Output>
     </InstallNodeJs>
     <Message Text="Working $(NodeJsExecutablePath)" Importance="High"></Message>

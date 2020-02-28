@@ -34,19 +34,37 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+    
+    <None Include="targets\build\Adeptik.NodeJs.Redistributable.props">
+      <Pack>True</Pack>
+      <PackagePath>build/</PackagePath>
+    </None>
+    <None Include="targets\build\Adeptik.NodeJs.Redistributable.targets">
+      <Pack>True</Pack>
+      <PackagePath>build/</PackagePath>
+    </None>
+    
+    <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.props">
+      <Pack>True</Pack>
+      <PackagePath>buildMultiTargeting/</PackagePath>
+    </None>
+    <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.targets">
+      <Pack>True</Pack>
+      <PackagePath>buildMultiTargeting/</PackagePath>
+    </None>
   </ItemGroup>
 
   <PropertyGroup>
     <PackageId>Adeptik.NodeJs.Redistributable</PackageId>
     <Version>$(SemanticVersion)$(PreReleaseLabelWithPrefix)$(BuildMetadataWithPrefix)</Version>
     <Authors>Snrd,Adeptik</Authors>
-    <Company />
     <Description>Target for MSBuild that installs NodeJS of version specified at soluton and yarn package manager. Also runs yarn command if specified.</Description>
     <RepositoryType>GitHub</RepositoryType>
     <RepositoryUrl>https://github.com/SnrdTeam/msbuild-nodejs-redistributable</RepositoryUrl>
     <Copyright>Copyright © Adeptik LLC</Copyright>
     <PackageIconUrl>https://raw.githubusercontent.com/SnrdTeam/snrd-icons/master/development-icons/dotnet-icon%4064.png</PackageIconUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
   </PropertyGroup>
-  
+
 </Project>
