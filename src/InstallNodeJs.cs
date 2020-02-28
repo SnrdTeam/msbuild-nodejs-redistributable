@@ -5,10 +5,10 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Adeptik.NodeJs.Redistributable
 {
@@ -17,6 +17,8 @@ namespace Adeptik.NodeJs.Redistributable
     /// </summary>
     public class InstallNodeJs : Task
     {
+        private readonly Regex VersionRegex = new Regex(@"^\d+\.\d+\.\d+$");
+
         /// <summary>
         /// Required version of NodeJS
         /// </summary>
@@ -24,54 +26,71 @@ namespace Adeptik.NodeJs.Redistributable
         public string NodeJsVersion { get; set; }
 
         /// <summary>
-        /// Returns path to downloaded node
+        /// Path where to download & unpack nodejs
+        /// </summary>
+        [Required]
+        public string WorkingDirectoryPath { get; set; }
+
+        private DirectoryInfo GetWorkingDirectory()
+        {
+            if (string.IsNullOrEmpty(WorkingDirectoryPath))
+                throw new Exception("NodePath property is invalid.");
+
+            return !Directory.Exists(WorkingDirectoryPath) ?
+                Directory.CreateDirectory(WorkingDirectoryPath) :
+                new DirectoryInfo(WorkingDirectoryPath);
+        }
+
+        private string GetDistribName()
+        {
+            static string GetNodeOSVersion()
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    return "win";
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    return "darwin";
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    return "linux";
+
+                throw new NotSupportedException("OS is not supported.");
+            }
+
+            static string GetNodeArchitectureVersion() => RuntimeInformation.OSArchitecture switch
+            {
+                Architecture.Arm => "armv7l",
+                Architecture.Arm64 => "arm64",
+                Architecture.X86 => "x86",
+                Architecture.X64 => "x64",
+                _ => throw new NotSupportedException("Architecture is not supported."),
+            };
+
+            if (string.IsNullOrEmpty(NodeJsVersion) && VersionRegex.IsMatch(NodeJsVersion))
+                throw new Exception("NodeJsVersion property value is invalid.");
+
+            return $"node-v{NodeJsVersion}-{GetNodeOSVersion()}-{GetNodeArchitectureVersion()}";
+        }
+
+        private string GetDistribFileName() =>
+            $"{GetDistribName()}.{(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "zip" : "tar.gz")}";
+
+        /// <summary>
+        /// Returns path to downloaded & unpacked node
         /// </summary>
         [Output]
-        public string NodeJsPath => $"{NodePath}/{GetDistribName()}/";
+        public string NodeJsPath =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
+            $"{GetWorkingDirectory().FullName}/{GetDistribName()}/" :
+            $"{GetWorkingDirectory().FullName}/{GetDistribName()}/bin/";
 
-        private string GetNodeOSVersion()
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return "win";
+        private string GetDistribArchiveFilePath() => $"{GetWorkingDirectory().FullName}/{GetDistribFileName()}";
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                return "darwin";
+        private string GetNodeJsLockFilePath() => $"{GetWorkingDirectory().FullName}/{GetDistribName()}/{GetDistribName()}.lock";
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return "linux";
+        private const string NodeUrl = "https://nodejs.org/download/release";
 
-            throw new NotSupportedException("OS is not supported.");
-        }
-
-        private string GetNodeArchitectureVersion() => RuntimeInformation.OSArchitecture switch
-        {
-            Architecture.Arm => "armv7l",
-            Architecture.Arm64 => "arm64",
-            Architecture.X86 => "x86",
-            Architecture.X64 => "x64",
-            _ => throw new NotSupportedException("Architecture is not supported."),
-        };
-
-        private string NodePath
-        {
-            get
-            {
-                var assemblyFileInfo = new FileInfo(typeof(InstallNodeJs).GetTypeInfo().Assembly.Location);
-                return Path.Combine(assemblyFileInfo.Directory.Parent.Parent.FullName, "node");
-            }
-        }
-
-        private string NodeUrl => "https://nodejs.org/download/release";
-
-        private string GetArchiveExtension() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "zip" : "tar.gz";
-
-        private string GetDistribName() => $"node-v{NodeJsVersion}-{GetNodeOSVersion()}-{GetNodeArchitectureVersion()}";
-
-        private string GetDistribFileName() => $"{GetDistribName()}.{GetArchiveExtension()}";
-
-        private string GetDistribFilePath() => $"{NodePath}/{GetDistribFileName()}";
-
-        private Uri GetDistribUrl() => new Uri($"{NodeUrl}/v{NodeJsVersion}/{GetDistribName()}.{GetArchiveExtension()}");
+        private Uri GetDistribUrl() => new Uri($"{NodeUrl}/v{NodeJsVersion}/{GetDistribFileName()}");
 
         private Uri GetDistribHashSumUrl() => new Uri($"{NodeUrl}/v{NodeJsVersion}/SHASUMS256.txt");
 
@@ -85,9 +104,6 @@ namespace Adeptik.NodeJs.Redistributable
 
             try
             {
-                if (!Directory.Exists(NodePath))
-                    Directory.CreateDirectory(NodePath);
-
                 if (!NodeJSExist())
                 {
                     if (!NodeJSDownloaded())
@@ -103,50 +119,17 @@ namespace Adeptik.NodeJs.Redistributable
 
             return !Log.HasLoggedErrors;
         }
-
-        private void UnpackNodeJS()
+        private bool NodeJSExist()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Log.LogMessage($"Unzipping {GetDistribFilePath()}...");
-                ZipFile.ExtractToDirectory(GetDistribFilePath(), $"{NodePath}");
-            }
-            else
-            {
-                Log.LogMessage($"Unpacking {GetDistribFilePath()} using tar...");
-                var process = new Process()
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "tar",
-                        Arguments = $" -xzf {GetDistribFilePath()}",
-                        WorkingDirectory = NodePath,
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                    }
-                };
-                process.Start();
-                process.WaitForExit();
-            }
-        }
+            if (File.Exists(GetNodeJsLockFilePath()))
+                return File.ReadAllText(GetNodeJsLockFilePath()) == NodeJsVersion;
 
-        private void DownloadNodeJS()
-        {
-            Log.LogMessage($"Downloading NodeJS from {GetDistribUrl()}");
-
-            using (var distribFile = new FileStream(GetDistribFilePath(), FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                DownloadFile(GetDistribUrl(), distribFile);
-            }
-
-            if (!NodeJSDownloaded())
-                throw new Exception("Downloaded NodeJS distrib is corrupted.");
+            return false;
         }
 
         private bool NodeJSDownloaded()
         {
-            string CalculateFileHashSum(string filePath)
+            static string CalculateFileHashSum(string filePath)
             {
                 static string ConvertByteArrayToHex(byte[] bytes)
                 {
@@ -164,12 +147,10 @@ namespace Adeptik.NodeJs.Redistributable
                 return ConvertByteArrayToHex(hash);
             }
 
-            string GetWellknownHashSum(string fileName)
+            static string GetWellknownHashSum(string fileName, Uri hashsumFileUri)
             {
-                Log.LogMessage($"Downloading NodeJS hash sum file.");
-
                 using var memoryStream = new MemoryStream();
-                DownloadFile(GetDistribHashSumUrl(), memoryStream);
+                DownloadFile(hashsumFileUri, memoryStream);
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
                 using var reader = new StreamReader(memoryStream);
@@ -184,22 +165,69 @@ namespace Adeptik.NodeJs.Redistributable
                 throw new Exception($"No information found about {fileName} in hashsum file.");
             }
 
-            if (!File.Exists(GetDistribFilePath()))
+            if (!File.Exists(GetDistribArchiveFilePath()))
                 return false;
 
-            var fileHashSum = CalculateFileHashSum(GetDistribFilePath()).ToLower();
+            var fileHashSum = CalculateFileHashSum(GetDistribArchiveFilePath()).ToLower();
             Log.LogMessage($"Calcualted hash sum {fileHashSum}.");
-            var wellknownHashSum = GetWellknownHashSum(GetDistribFileName().ToLower());
+
+            Log.LogMessage($"Downloading NodeJS hash sum file.");
+            var wellknownHashSum = GetWellknownHashSum(GetDistribFileName().ToLower(), GetDistribHashSumUrl());
             Log.LogMessage($"Found hash sum {wellknownHashSum}.");
 
             return fileHashSum == wellknownHashSum;
         }
 
-        private bool NodeJSExist() => Directory.Exists($"{NodePath}/{GetDistribName()}");
-
-        private void DownloadFile(Uri uri, Stream stream)
+        private void DownloadNodeJS()
         {
-            Log.LogMessage($"Downloading file from {uri}.");
+            Log.LogMessage($"Downloading NodeJS from {GetDistribUrl()}");
+
+            using (var distribFile = new FileStream(GetDistribArchiveFilePath(), FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                DownloadFile(GetDistribUrl(), distribFile);
+            }
+
+            if (!NodeJSDownloaded())
+                throw new Exception("Downloaded NodeJS distrib is corrupted.");
+        }
+
+        private void UnpackNodeJS()
+        {
+            static void WriteLockFile(string path, string version)
+            {
+                using var writer = File.CreateText(path);
+                writer.Write(version);
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Log.LogMessage($"Unzipping {GetDistribArchiveFilePath()}...");
+                ZipFile.ExtractToDirectory(GetDistribArchiveFilePath(), $"{WorkingDirectoryPath}");
+            }
+            else
+            {
+                Log.LogMessage($"Unpacking {GetDistribArchiveFilePath()} using tar...");
+                var process = new Process()
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "tar",
+                        Arguments = $" -xzf {GetDistribArchiveFilePath()}",
+                        WorkingDirectory = WorkingDirectoryPath,
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    }
+                };
+                process.Start();
+                process.WaitForExit();
+            }
+
+            WriteLockFile(GetNodeJsLockFilePath(), NodeJsVersion);
+        }
+
+        private static void DownloadFile(Uri uri, Stream stream)
+        {
             try
             {
                 using var client = new HttpClient(new HttpClientHandler(), disposeHandler: true);
