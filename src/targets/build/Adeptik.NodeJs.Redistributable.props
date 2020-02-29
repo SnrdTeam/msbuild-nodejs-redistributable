@@ -5,8 +5,12 @@
   <PropertyGroup>
     <NodeJsDistTempPath>$(MSBuildThisFileDirectory)/../node</NodeJsDistTempPath>
     <NodeJsVersion></NodeJsVersion>
+    <NodeJsPath></NodeJsPath>
+    <GlobalNodeModulesPath></GlobalNodeModulesPath>
+    <NodeExecutable></NodeExecutable>
+    <NPMExecutable></NPMExecutable>
     <YarnVersion>latest</YarnVersion>
-    <NodeJsExecutablePath></NodeJsExecutablePath>
+    <YarnExecutable></YarnExecutable>
     <YarnBuildCommand></YarnBuildCommand>
   </PropertyGroup>
 

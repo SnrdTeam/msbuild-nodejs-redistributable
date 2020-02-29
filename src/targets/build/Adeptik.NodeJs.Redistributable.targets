@@ -6,29 +6,35 @@
   <Target Name="InstallNodeJs" Returns="$(NodeJsExecutablePath)">
     <Error Text="NodeJsVersion variable not set." Condition="'$(NodeJsVersion)' == ''" />
     <InstallNodeJs NodeJsVersion="$(NodeJsVersion)" WorkingDirectoryPath="$(NodeJsDistTempPath)">
-      <Output TaskParameter="NodeJsPath" PropertyName="NodeJsExecutablePath"></Output>
+      <Output TaskParameter="NodeJsPath" PropertyName="NodeJsPath"></Output>
+      <Output TaskParameter="GlobalNodeModulesPath" PropertyName="GlobalNodeModulesPath"></Output>
+      <Output TaskParameter="NodeExecutable" PropertyName="NodeExecutable"></Output>
+      <Output TaskParameter="NPMExecutable" PropertyName="NPMExecutable"></Output>
     </InstallNodeJs>
     <Message Text="Working $(NodeJsExecutablePath)" Importance="High"></Message>
   </Target>
 
   <!-- Install yarn using NPM -->
   <Target Name="InstallYarn" DependsOnTargets="InstallNodeJs">
-    <Exec Command="$(NodeJsExecutablePath)npm install yarn@$(YarnVersion)"
-          WorkingDirectory="$(NodeJsExecutablePath)"
+    <Exec Command="$(NPMExecutable) install -g yarn@$(YarnVersion)"
+          WorkingDirectory="$(NodeJsPath)"
           ConsoleToMSBuild="True"
     />
+    <PropertyGroup>
+      <YarnExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)yarn/bin/yarn.js</YarnExecutable>
+    </PropertyGroup>
   </Target>
 
   <!-- Install project packages using yarn -->
   <Target Name="YarnInstall" DependsOnTargets="InstallYarn">
-    <Exec Command="$(NodeJsExecutablePath)yarn install"
+    <Exec Command="$(YarnExecutable) install"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           ConsoleToMSBuild="True" />
   </Target>
 
   <!-- Run yarn command if specified -->
   <Target Name="YarnRun" DependsOnTargets="YarnInstall"  BeforeTargets="CoreCompile" Condition="'$(YarnBuildCommand)' != '' ">
-    <Exec Command="$(NodeJsExecutablePath)yarn $(YarnBuildCommand)"
+    <Exec Command="$(YarnExecutable) $(YarnBuildCommand)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           ConsoleToMSBuild="True" />
   </Target>

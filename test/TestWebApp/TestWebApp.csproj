@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Adeptik.NodeJs.Redistributable" Version="2.0.0-Preview3" />
+    <PackageReference Include="Adeptik.NodeJs.Redistributable" Version="2.0.0-Preview5" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.9.10" />
   </ItemGroup>
 

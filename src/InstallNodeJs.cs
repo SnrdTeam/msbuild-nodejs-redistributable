@@ -80,9 +80,34 @@ namespace Adeptik.NodeJs.Redistributable
         /// </summary>
         [Output]
         public string NodeJsPath =>
+            $"{GetWorkingDirectory().FullName}/{GetDistribName()}/";
+
+        /// <summary>
+        /// Returns path to global node_modules directory
+        /// </summary>
+        [Output]
+        public string GlobalNodeModulesPath =>
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
-            $"{GetWorkingDirectory().FullName}/{GetDistribName()}/" :
-            $"{GetWorkingDirectory().FullName}/{GetDistribName()}/bin/";
+            $"{NodeJsPath}node_modules/" :
+            $"{NodeJsPath}lib/node_modules/";
+
+        /// <summary>
+        /// Returns commandline to run node
+        /// </summary>
+        [Output]
+        public string NodeExecutable =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
+            $"{NodeJsPath}node.exe" :
+            $"{NodeJsPath}bin/node";
+
+        /// <summary>
+        /// Returns commandline to run npm
+        /// </summary>
+        [Output]
+        public string NPMExecutable =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
+            $"{NodeJsPath}npm.cmd" :
+            $"{NodeJsPath}lib/node_modules/npm/bin/npm";
 
         private string GetDistribArchiveFilePath() => $"{GetWorkingDirectory().FullName}/{GetDistribFileName()}";
 
