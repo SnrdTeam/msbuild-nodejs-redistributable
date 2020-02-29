@@ -11,7 +11,7 @@
       <Output TaskParameter="NodeExecutable" PropertyName="NodeExecutable"></Output>
       <Output TaskParameter="NPMExecutable" PropertyName="NPMExecutable"></Output>
     </InstallNodeJs>
-    <Message Text="Working $(NodeJsExecutablePath)" Importance="High"></Message>
+    <Message Text="Working with NodeJS at $(NodeJsPath)"></Message>
   </Target>
 
   <!-- Install yarn using NPM -->
