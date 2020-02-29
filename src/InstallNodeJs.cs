@@ -107,7 +107,7 @@ namespace Adeptik.NodeJs.Redistributable
         public string NPMExecutable =>
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
             $"{NodeJsPath}npm.cmd" :
-            $"{NodeJsPath}lib/node_modules/npm/bin/npm";
+            $"{NodeExecutable} {NodeJsPath}lib/node_modules/npm/bin/npm-cli.js";
 
         private string GetDistribArchiveFilePath() => $"{GetWorkingDirectory().FullName}/{GetDistribFileName()}";
 
