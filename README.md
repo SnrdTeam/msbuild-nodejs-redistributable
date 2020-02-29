@@ -29,7 +29,7 @@ Specify a version of NodeJs you wish to use by adding property in .csproj:
 
 ```xml
 <PropertyGroup>
-    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+    <NodeJsVersion>12.15.0</NodeJsVersion>
 </PropertyGroup>
 ```
 
@@ -53,7 +53,7 @@ You can specify yarn version by setting `$(YarnVersion)` property. By default `$
 
 ```xml
 <PropertyGroup>
-    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+    <NodeJsVersion>12.15.0</NodeJsVersion>
     <YarnVersion>1.22.0</YarnVersion>
 </PropertyGroup>
 ```
@@ -65,11 +65,11 @@ You can install node modules (listed in package.json file in the root of your pr
 
 ### Run node scripts from package.json via Yarn
 
-You can run node scripts described in package.json using Yarn by setting `$(YarnBuildCommand)`. Target `YarnRun` automatically runs this command before `CoreCompile`. Also note that YarnRun target depends on YarnInstall target. So you can set only two variable to get node, yarn, install node modules and run script, like shown below.
+You can run node scripts described in package.json using Yarn by setting `$(YarnBuildCommand)`. Target `YarnRun` automatically runs this command before `CoreCompile`. Also note that YarnRun target depends on YarnInstall target. So you can set only two properties to get node, yarn, install node modules and run script, like shown below.
 
 ```xml
 <PropertyGroup>
-    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+    <NodeJsVersion>12.15.0</NodeJsVersion>
     <YarnVersion>1.22.0</YarnVersion>
     <YarnBuildCommand>build</YarnBuildCommand>
 </PropertyGroup>
