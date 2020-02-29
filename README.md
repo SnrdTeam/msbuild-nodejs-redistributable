@@ -27,19 +27,19 @@ or add in your .csproj:
 
 Specify a version of NodeJs you wish to use by adding property in .csproj:
 
-    ```xml
-    <PropertyGroup>
-        <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
-    </PropertyGroup>
-    ```
+```xml
+<PropertyGroup>
+    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+</PropertyGroup>
+```
 
 Now you can get downloaded distribution of NodeJs in your target by setting target's `DependsOn` attribute to `InstallNodeJs` and reading `$(NodeJsPath)`, `$(GlobalNodeModulesPath)`, `$(NodeExecutable)` and `$(NPMExecutable)` properties.
 
-    ```xml
-    <Target Name="YourTarget" DependsOnTargets="InstallNodeJs">
-        <Message Text="Using $(NodeJsPath)" />
-    </Target>
-    ```
+```xml
+<Target Name="YourTarget" DependsOnTargets="InstallNodeJs">
+    <Message Text="Using $(NodeJsPath)" />
+</Target>
+```
 - `$(NodeJsPath)` contains full path to downloaded & unpacked NodeJs distrib
 - `$(GlobalNodeModulesPath)` contains full path to node_modules directory where global packages are stored
 - `$(NodeExecutable)` contains command (with full path) to run node executable
@@ -51,12 +51,12 @@ You can install yarn package manager in your target by setting target's `Depends
 
 You can specify yarn version by setting `$(YarnVersion)` property. By default `$(YarnVersion)` set to `latest`. 
 
-    ```xml
-    <PropertyGroup>
-        <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
-        <YarnVersion>1.22.0</YarnVersion>
-    </PropertyGroup>
-    ```
+```xml
+<PropertyGroup>
+    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+    <YarnVersion>1.22.0</YarnVersion>
+</PropertyGroup>
+```
 Yarn command line stored to `$(YarnExecutable)` property.
 
 ### Node modules installation via Yarn
@@ -67,9 +67,10 @@ You can install node modules (listed in package.json file in the root of your pr
 
 You can run node scripts described in package.json using Yarn by setting `$(YarnBuildCommand)`. Target `YarnRun` automatically runs this command before `CoreCompile`. Also note that YarnRun target depends on YarnInstall target. So you can set only two variable to get node, yarn, install node modules and run script, like shown below.
 
-    ```xml
-    <PropertyGroup>
-        <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
-        <YarnBuildCommand>build</YarnBuildCommand>
-    </PropertyGroup>
-    ```
+```xml
+<PropertyGroup>
+    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+    <YarnVersion>1.22.0</YarnVersion>
+    <YarnBuildCommand>build</YarnBuildCommand>
+</PropertyGroup>
+```
