@@ -154,8 +154,26 @@ namespace Adeptik.NodeJs.Redistributable
 
         private bool NodeJSDownloaded()
         {
+            if (!File.Exists(GetDistribArchiveFilePath()))
+                return false;
+
+            var fileHashSum = CalculateFileHashSum(GetDistribArchiveFilePath()).ToLower();
+            Log.LogMessage($"Calcualted hash sum {fileHashSum}.");
+
+            Log.LogMessage($"Downloading NodeJS hash sum file.");
+            var wellknownHashSum = GetWellknownHashSum(GetDistribFileName().ToLower(), GetDistribHashSumUrl());
+            Log.LogMessage($"Found hash sum {wellknownHashSum}.");
+
+            return fileHashSum == wellknownHashSum;
+            
             static string CalculateFileHashSum(string filePath)
             {
+                using var stream = File.OpenRead(filePath);
+                using var algorithm = SHA256.Create();
+                var hash = algorithm.ComputeHash(stream);
+
+                return ConvertByteArrayToHex(hash);
+
                 static string ConvertByteArrayToHex(byte[] bytes)
                 {
                     var sb = new StringBuilder();
@@ -164,12 +182,6 @@ namespace Adeptik.NodeJs.Redistributable
 
                     return sb.ToString();
                 }
-
-                using var stream = File.OpenRead(filePath);
-                using var algorithm = SHA256.Create();
-                var hash = algorithm.ComputeHash(stream);
-
-                return ConvertByteArrayToHex(hash);
             }
 
             static string GetWellknownHashSum(string fileName, Uri hashsumFileUri)
@@ -189,18 +201,6 @@ namespace Adeptik.NodeJs.Redistributable
                 }
                 throw new Exception($"No information found about {fileName} in hashsum file.");
             }
-
-            if (!File.Exists(GetDistribArchiveFilePath()))
-                return false;
-
-            var fileHashSum = CalculateFileHashSum(GetDistribArchiveFilePath()).ToLower();
-            Log.LogMessage($"Calcualted hash sum {fileHashSum}.");
-
-            Log.LogMessage($"Downloading NodeJS hash sum file.");
-            var wellknownHashSum = GetWellknownHashSum(GetDistribFileName().ToLower(), GetDistribHashSumUrl());
-            Log.LogMessage($"Found hash sum {wellknownHashSum}.");
-
-            return fileHashSum == wellknownHashSum;
         }
 
         private void DownloadNodeJS()
@@ -218,12 +218,6 @@ namespace Adeptik.NodeJs.Redistributable
 
         private void UnpackNodeJS()
         {
-            static void WriteLockFile(string path, string version)
-            {
-                using var writer = File.CreateText(path);
-                writer.Write(version);
-            }
-
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 Log.LogMessage($"Unzipping {GetDistribArchiveFilePath()}...");
@@ -249,6 +243,12 @@ namespace Adeptik.NodeJs.Redistributable
             }
 
             WriteLockFile(GetNodeJsLockFilePath(), NodeJsVersion);
+
+            static void WriteLockFile(string path, string version)
+            {
+                using var writer = File.CreateText(path);
+                writer.Write(version);
+            }
         }
 
         private static void DownloadFile(Uri uri, Stream stream)

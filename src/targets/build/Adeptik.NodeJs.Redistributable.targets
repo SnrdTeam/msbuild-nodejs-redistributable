@@ -4,7 +4,7 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- Download NodeJS distrib & unpack -->
   <Target Name="InstallNodeJs" Returns="$(NodeJsExecutablePath)">
-    <Error Text="NodeJsVersion variable not set." Condition="'$(NodeJsVersion)' == ''" />
+    <Error Text="NodeJsVersion property not set." Condition="'$(NodeJsVersion)' == ''" />
     <InstallNodeJs NodeJsVersion="$(NodeJsVersion)" WorkingDirectoryPath="$(NodeJsDistTempPath)">
       <Output TaskParameter="NodeJsPath" PropertyName="NodeJsPath"></Output>
       <Output TaskParameter="GlobalNodeModulesPath" PropertyName="GlobalNodeModulesPath"></Output>
