@@ -6,7 +6,7 @@ MSBuild targets for:
 * Node modules installation via yarn
 * Run node scripts from package.json via yarn
 
-Supports Windows, Linux & MacOS
+Supports Windows, Linux & MacOS.
 
 ![Build Status](https://tfs.adeptik.com/Adeptik/_apis/public/build/definitions/5f6da651-409b-4516-b0c6-16518d60e6e9/137/badge)
 [![Nuget Package](https://img.shields.io/nuget/vpre/Adeptik.NodeJs.Redistributable)](https://www.nuget.org/packages/Adeptik.NodeJs.Redistributable/)
@@ -29,7 +29,7 @@ Specify a version of NodeJs you wish to use by adding property in .csproj:
 
 ```xml
 <PropertyGroup>
-    <NodeJsVersion>12.15.0</NodeJsVersion>
+    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
 </PropertyGroup>
 ```
 
@@ -40,8 +40,8 @@ Now you can get downloaded distribution of NodeJs in your target by setting targ
     <Message Text="Using $(NodeJsPath)" />
 </Target>
 ```
-- `$(NodeJsPath)` contains full path to downloaded & unpacked NodeJs distrib
-- `$(GlobalNodeModulesPath)` contains full path to node_modules directory where global packages are stored
+- `$(NodeJsPath)` contains full path to downloaded & unpacked NodeJs distrib (with trailing slash)
+- `$(GlobalNodeModulesPath)` contains full path to node_modules directory where global packages are stored (with trailing slash)
 - `$(NodeExecutable)` contains command (with full path) to run node executable
 - `$(NPMExecutable)` contains command (with full path) to run npm
 
@@ -53,11 +53,11 @@ You can specify yarn version by setting `$(YarnVersion)` property. By default `$
 
 ```xml
 <PropertyGroup>
-    <NodeJsVersion>12.15.0</NodeJsVersion>
+    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
     <YarnVersion>1.22.0</YarnVersion>
 </PropertyGroup>
 ```
-Yarn command line stored to `$(YarnExecutable)` property.
+Yarn command stored to `$(YarnExecutable)` property.
 
 ### Node modules installation via Yarn
 
@@ -69,8 +69,7 @@ You can run node scripts described in package.json using Yarn by setting `$(Yarn
 
 ```xml
 <PropertyGroup>
-    <NodeJsVersion>12.15.0</NodeJsVersion>
-    <YarnVersion>1.22.0</YarnVersion>
+    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
     <YarnBuildCommand>build</YarnBuildCommand>
 </PropertyGroup>
 ```

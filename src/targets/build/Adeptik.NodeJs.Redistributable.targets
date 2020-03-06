@@ -2,16 +2,26 @@
 
 <!-- Downloads NodeJs distribution to use in project -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Output properties -->
+  <PropertyGroup>
+    <NodeJsPath></NodeJsPath>
+    <GlobalNodeModulesPath></GlobalNodeModulesPath>
+    <NodeExecutable></NodeExecutable>
+    <NPMExecutable></NPMExecutable>
+    
+    <YarnExecutable></YarnExecutable>
+  </PropertyGroup>
+  
   <!-- Download NodeJS distrib & unpack -->
-  <Target Name="InstallNodeJs" Returns="$(NodeJsExecutablePath)">
-    <Error Text="NodeJsVersion property not set." Condition="'$(NodeJsVersion)' == ''" />
-    <InstallNodeJs NodeJsVersion="$(NodeJsVersion)" WorkingDirectoryPath="$(NodeJsDistTempPath)">
-      <Output TaskParameter="NodeJsPath" PropertyName="NodeJsPath"></Output>
-      <Output TaskParameter="GlobalNodeModulesPath" PropertyName="GlobalNodeModulesPath"></Output>
-      <Output TaskParameter="NodeExecutable" PropertyName="NodeExecutable"></Output>
-      <Output TaskParameter="NPMExecutable" PropertyName="NPMExecutable"></Output>
+  <Target Name="InstallNodeJs">
+    <Error Text="NodeJsDistVersion property not set." Condition="'$(NodeJsDistVersion)' == ''" />
+    <InstallNodeJs NodeJsVersion="$(NodeJsDistVersion)" WorkingDirectoryPath="$(NodeJsDistTempPath)">
+      <Output TaskParameter="NodeJsPath" PropertyName="NodeJsPath"/>
+      <Output TaskParameter="GlobalNodeModulesPath" PropertyName="GlobalNodeModulesPath"/>
+      <Output TaskParameter="NodeExecutable" PropertyName="NodeExecutable"/>
+      <Output TaskParameter="NPMExecutable" PropertyName="NPMExecutable"/>
     </InstallNodeJs>
-    <Message Text="Working with NodeJS at $(NodeJsPath)"></Message>
+    <Message Text="Working with NodeJS at $(NodeJsPath)"/>
   </Target>
 
   <!-- Install yarn using NPM -->
@@ -21,7 +31,7 @@
           ConsoleToMSBuild="True"
     />
     <PropertyGroup>
-      <YarnExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)yarn/bin/yarn.js</YarnExecutable>
+      <YarnExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)/yarn/bin/yarn.js</YarnExecutable>
     </PropertyGroup>
   </Target>
 

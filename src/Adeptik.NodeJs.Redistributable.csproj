@@ -3,24 +3,25 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
     <LangVersion>8.0</LangVersion>
-    <SemanticVersion>2.0.2</SemanticVersion>
+    <SemanticVersion>2.0.3</SemanticVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <PreReleaseLabelWithPrefix Condition=" '$(PreReleaseLabel)' != '' ">-$(PreReleaseLabel)</PreReleaseLabelWithPrefix>
     <BuildMetadataWithPrefix Condition=" '$(BuildMetadata)' != '' ">+$(BuildMetadata)</BuildMetadataWithPrefix>
+    <Version>$(SemanticVersion)$(PreReleaseLabelWithPrefix)$(BuildMetadataWithPrefix)</Version>
     <AssemblyVersion>$(SemanticVersion)</AssemblyVersion>
     <FileVersion>$(SemanticVersion)</FileVersion>
-    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <PropertyGroup>
     <PrepareForBuildDependsOn>ValidateSemanticVersion;$(PrepareForBuildDependsOn)</PrepareForBuildDependsOn>
   </PropertyGroup>
 
-  <Target Name="ValidateSemanticVersion" BeforeTargets="Build">
+  <Target Name="ValidateSemanticVersion" BeforeTargets="CoreCompile">
     <!-- Regular expression from https://github.com/semver/semver/issues/232 -->
-    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch($(Version), `^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$`, RegexOptions.None))" Text="Version has invalid format. See https://semver.org" />
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch($(Version), `^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$`, RegexOptions.None))"
+           Text="Version has invalid format. See https://semver.org" />
   </Target>
 
   <ItemGroup>
@@ -29,35 +30,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-    
-    <None Include="targets\build\Adeptik.NodeJs.Redistributable.props">
-      <Pack>True</Pack>
-      <PackagePath>build/</PackagePath>
-    </None>
-    <None Include="targets\build\Adeptik.NodeJs.Redistributable.targets">
-      <Pack>True</Pack>
-      <PackagePath>build/</PackagePath>
-    </None>
-    
-    <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.props">
-      <Pack>True</Pack>
-      <PackagePath>buildMultiTargeting/</PackagePath>
-    </None>
-    <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.targets">
-      <Pack>True</Pack>
-      <PackagePath>buildMultiTargeting/</PackagePath>
-    </None>
+    <None Include="..\LICENSE" Pack="True" PackagePath=""/>
+
+    <None Include="targets\build\Adeptik.NodeJs.Redistributable.props" Pack="True" PackagePath="build/" />
+    <None Include="targets\build\Adeptik.NodeJs.Redistributable.targets" Pack="True" PackagePath="build/" />
+    <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.props" Pack="True" PackagePath="buildMultiTargeting/" />
+    <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.targets" Pack="True" PackagePath="buildMultiTargeting/" />
   </ItemGroup>
 
   <PropertyGroup>
     <PackageId>Adeptik.NodeJs.Redistributable</PackageId>
-    <Version>$(SemanticVersion)$(PreReleaseLabelWithPrefix)$(BuildMetadataWithPrefix)</Version>
     <Authors>Snrd,Adeptik</Authors>
-    <Description>Target for MSBuild that installs NodeJS of version specified at soluton and yarn package manager. Also runs yarn command if specified.</Description>
+    <Description>Target for MSBuild that installs NodeJS of specified version and yarn package manager. Also runs yarn command if specified.</Description>
     <RepositoryType>GitHub</RepositoryType>
     <RepositoryUrl>https://github.com/SnrdTeam/msbuild-nodejs-redistributable</RepositoryUrl>
     <Copyright>Copyright © Adeptik LLC</Copyright>
