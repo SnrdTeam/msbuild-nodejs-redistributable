@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Properties -->
+  <PropertyGroup>
+    <NodeJsDistTempPath Condition="'$(NodeJsDistTempPath)' == ''">$(MSBuildThisFileDirectory)/../node</NodeJsDistTempPath>
+    <NodeJsDistVersion Condition="'$(NodeJsDistVersion)' == ''"></NodeJsDistVersion>
+    <YarnVersion Condition="'$(YarnVersion)' == ''">latest</YarnVersion>    
+    <YarnBuildCommand Condition="'$(YarnBuildCommand)' == ''"></YarnBuildCommand>
+  </PropertyGroup>
+
+  <!-- Register Task -->
+  <UsingTask AssemblyFile="..\tools\netstandard1.5\Adeptik.NodeJs.Redistributable.dll" TaskName="Adeptik.NodeJs.Redistributable.InstallNodeJs" />
+</Project>

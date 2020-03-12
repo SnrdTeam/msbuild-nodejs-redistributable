@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+
+<!-- Downloads NodeJs distribution to use in project -->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Output properties -->
+  <PropertyGroup>
+    <NodeJsPath></NodeJsPath>
+    <GlobalNodeModulesPath></GlobalNodeModulesPath>
+    <NodeExecutable></NodeExecutable>
+    <NPMExecutable></NPMExecutable>
+    
+    <YarnExecutable></YarnExecutable>
+  </PropertyGroup>
+  
+  <!-- Download NodeJS distrib & unpack -->
+  <Target Name="InstallNodeJs">
+    <Error Text="NodeJsDistVersion property not set." Condition="'$(NodeJsDistVersion)' == ''" />
+    <InstallNodeJs NodeJsVersion="$(NodeJsDistVersion)" WorkingDirectoryPath="$(NodeJsDistTempPath)">
+      <Output TaskParameter="NodeJsPath" PropertyName="NodeJsPath"/>
+      <Output TaskParameter="GlobalNodeModulesPath" PropertyName="GlobalNodeModulesPath"/>
+      <Output TaskParameter="NodeExecutable" PropertyName="NodeExecutable"/>
+      <Output TaskParameter="NPMExecutable" PropertyName="NPMExecutable"/>
+    </InstallNodeJs>
+    <Message Text="Working with NodeJS at $(NodeJsPath)"/>
+  </Target>
+
+  <!-- Install yarn using NPM -->
+  <Target Name="InstallYarn" DependsOnTargets="InstallNodeJs">
+    <Exec Command="$(NPMExecutable) install -g yarn@$(YarnVersion)"
+          WorkingDirectory="$(NodeJsPath)"
+          ConsoleToMSBuild="True"
+    />
+    <PropertyGroup>
+      <YarnExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)/yarn/bin/yarn.js</YarnExecutable>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Install project packages using yarn -->
+  <Target Name="YarnInstall" DependsOnTargets="InstallYarn">
+    <Exec Command="$(YarnExecutable) install"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ConsoleToMSBuild="True" />
+  </Target>
+
+  <!-- Run yarn command if specified -->
+  <Target Name="YarnRun" DependsOnTargets="YarnInstall"  BeforeTargets="CoreCompile" Condition="'$(YarnBuildCommand)' != '' ">
+    <Exec Command="$(YarnExecutable) $(YarnBuildCommand)"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ConsoleToMSBuild="True" />
+  </Target>
+
+  <!--Setup yarn build dependences-->
+  <PropertyGroup>
+    <PrepareForBuildDependsOn>YarnRun;$(PrepareForBuildDependsOn)</PrepareForBuildDependsOn>
+    <CoreCompileDependsOn>$(CoreCompileDependsOn);YarnRun</CoreCompileDependsOn>
+  </PropertyGroup>
+
+</Project>

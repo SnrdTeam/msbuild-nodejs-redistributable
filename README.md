@@ -1,34 +1,75 @@
 # Adeptik NodeJs Redistributable
 
-MSBuild NodeJs installation target.
+MSBuild targets for:
+* NodeJs installation
+* Yarn installation
+* Node modules installation via yarn
+* Run node scripts from package.json via yarn
+
+Supports Windows, Linux & MacOS.
 
 ![Build Status](https://tfs.adeptik.com/Adeptik/_apis/public/build/definitions/5f6da651-409b-4516-b0c6-16518d60e6e9/137/badge)
 [![Nuget Package](https://img.shields.io/nuget/vpre/Adeptik.NodeJs.Redistributable)](https://www.nuget.org/packages/Adeptik.NodeJs.Redistributable/)
 
 ## Usage
 
-To aquire required version of NodeJs follow steps:
+### Package installation
 
-1. Install Adeptik.NodeJs.Redistributable package from Nuget
+Install Adeptik.NodeJs.Redistributable package from Nuget
 
-        Install-Package Adeptik.NodeJs.Redistributable -Version 1.0.0
+    Install-Package Adeptik.NodeJs.Redistributable -Version 2.0.3
 
-    or add in your .csproj:
+or add in your .csproj:
 
-        <PackageReference Include="Adeptik.NodeJs.Redistributable" Version="1.0.0" />
+    <PackageReference Include="Adeptik.NodeJs.Redistributable" Version="2.0.3" />
 
-2. Specify a version of NodeJs youwish to use by adding property in .csproj:
+### NodeJs installation
 
-    ```xml
-    <PropertyGroup>
-        <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
-    </PropertyGroup>
-    ```
+Specify a version of NodeJs you wish to use by adding property in .csproj:
 
-3. Now you can get full path to the downloaded distribution in your target by setting target's `DependsOn` attribute to `InstallNodeJs` and reading `$(NodeJsExecutablePath)` property:
+```xml
+<PropertyGroup>
+    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+</PropertyGroup>
+```
 
-    ```xml
-    <Target Name="YourTarget" DependsOnTargets="InstallNodeJs">
-        <Message Text="Using $(NodeJsExecutablePath)" />
-    </Target>
-    ```
+Now you can get downloaded distribution of NodeJs in your target by setting target's `DependsOn` attribute to `InstallNodeJs` and reading `$(NodeJsPath)`, `$(GlobalNodeModulesPath)`, `$(NodeExecutable)` and `$(NPMExecutable)` properties.
+
+```xml
+<Target Name="YourTarget" DependsOnTargets="InstallNodeJs">
+    <Message Text="Using $(NodeJsPath)" />
+</Target>
+```
+- `$(NodeJsPath)` contains full path to downloaded & unpacked NodeJs distrib (with trailing slash)
+- `$(GlobalNodeModulesPath)` contains full path to node_modules directory where global packages are stored (with trailing slash)
+- `$(NodeExecutable)` contains command (with full path) to run node executable
+- `$(NPMExecutable)` contains command (with full path) to run npm
+
+### Yarn installation
+
+You can install yarn package manager in your target by setting target's `DependsOn` attribute to `InstallYarn`. InstallYarn target depends on InstallNodeJs target. 
+
+You can specify yarn version by setting `$(YarnVersion)` property. By default `$(YarnVersion)` set to `latest`. 
+
+```xml
+<PropertyGroup>
+    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+    <YarnVersion>1.22.0</YarnVersion>
+</PropertyGroup>
+```
+Yarn command stored to `$(YarnExecutable)` property.
+
+### Node modules installation via Yarn
+
+You can install node modules (listed in package.json file in the root of your project) using yarn package manager in your target by setting target's `DependsOn` attribute to `YarnInstall`. YarnInstall target depends on InstallYarn target.
+
+### Run node scripts from package.json via Yarn
+
+You can run node scripts described in package.json using Yarn by setting `$(YarnBuildCommand)`. Target `YarnRun` automatically runs this command before `CoreCompile`. Also note that YarnRun target depends on YarnInstall target. So you can set only two properties to get node, yarn, install node modules and run script, like shown below.
+
+```xml
+<PropertyGroup>
+    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+    <YarnBuildCommand>build</YarnBuildCommand>
+</PropertyGroup>
+```
