@@ -17,11 +17,11 @@ Supports Windows, Linux & MacOS.
 
 Install Adeptik.NodeJs.Redistributable package from Nuget
 
-    Install-Package Adeptik.NodeJs.Redistributable -Version 2.0.2
+    Install-Package Adeptik.NodeJs.Redistributable -Version 2.0.3
 
 or add in your .csproj:
 
-    <PackageReference Include="Adeptik.NodeJs.Redistributable" Version="2.0.2" />
+    <PackageReference Include="Adeptik.NodeJs.Redistributable" Version="2.0.3" />
 
 ### NodeJs installation
 
