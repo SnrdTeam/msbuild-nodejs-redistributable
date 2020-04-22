@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    The test runner requires the test adapter dll to be in the same folder as the 
+    generated assembly even though we don't require the assembly.
+  -->
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Adeptik.NodeJs.UnitTesting.TestAdapter.dll">
+      <Link>Adeptik.NodeJs.UnitTesting.TestAdapter.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>False</Visible>
+    </Content>
+  </ItemGroup>
+</Project>
