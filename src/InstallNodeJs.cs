@@ -58,55 +58,39 @@ namespace Adeptik.NodeJs.Redistributable
         /// Required version of NodeJS
         /// </summary>
         [Required]
-        public string NodeJsVersion { get; set; }
+        public string? NodeJsVersion { get; set; }
 
         /// <summary>
         /// Path where to download & unpack nodejs
         /// </summary>
         [Required]
-        public string WorkingDirectoryPath { get; set; }
+        public string? WorkingDirectoryPath { get; set; }
 
         /// <summary>
         /// Returns path to downloaded & unpacked node
         /// </summary>
         [Output]
-        public string NodeJsPath { get; private set; }
+        public string? NodeJsPath { get; private set; }
 
         /// <summary>
         /// Returns path to global node_modules directory
         /// </summary>
         [Output]
-        public string GlobalNodeModulesPath { get; private set; }
+        public string? GlobalNodeModulesPath { get; private set; }
 
         /// <summary>
         /// Returns commandline to run node
         /// </summary>
         [Output]
-        public string NodeExecutable { get; private set; }
+        public string? NodeExecutable { get; private set; }
 
         /// <summary>
         /// Returns commandline to run npm
         /// </summary>
         [Output]
-        public string NPMExecutable { get; private set; }
+        public string? NPMExecutable { get; private set; }        
 
-        private DirectoryInfo _workingDirectory;
-
-        private string _distribName;
-
-        private string _distribFileName;
-
-        private string _distribFilePath;
-
-        private string _nodeDirectoryPath;
-
-        private string _lockfileFilePath;
-
-        private const string NodeUrl = "https://nodejs.org/download/release";
-
-        private Uri DistribHashSumUrl => new Uri($"{NodeUrl}/v{NodeJsVersion}/SHASUMS256.txt");
-
-        private Uri DistribUrl => new Uri($"{NodeUrl}/v{NodeJsVersion}/{_distribFileName}");
+        private const string NodeUrl = "https://nodejs.org/download/release";           
 
         /// <summary>
         /// Ensure that NodeJS downloaded & install yarn
@@ -116,6 +100,17 @@ namespace Adeptik.NodeJs.Redistributable
         {
             Log.LogMessage($"Ensuring NodeJS {NodeJsVersion} exists...");
 
+            if (NodeJsVersion == null) throw new ArgumentNullException(nameof(NodeJsVersion));
+
+            DirectoryInfo workingDirectory;
+            string distribName;
+            string distribFileName;
+            string distribFilePath;
+            string nodeDirectoryPath;
+            string lockfileFilePath;
+            Uri distribHashSumUrl;
+            Uri distribUrl;
+            
             try
             {
                 InitPathInfo();
@@ -140,169 +135,173 @@ namespace Adeptik.NodeJs.Redistributable
             }
 
             return !Log.HasLoggedErrors;
-        }
 
-        private void SetOutputProperties()
-        {
-            NodeJsPath = _nodeDirectoryPath;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            void InitPathInfo()
             {
-                GlobalNodeModulesPath = Path.Combine(NodeJsPath, "node_modules");
-                NodeExecutable = Path.Combine(NodeJsPath, "node.exe");
-                NPMExecutable = Path.Combine(NodeJsPath, "npm.cmd");
-            }
-            else
-            {
-                GlobalNodeModulesPath = Path.Combine(NodeJsPath, "lib", "node_modules");
-                NodeExecutable = Path.Combine(NodeJsPath, "bin", "node");
-                NPMExecutable = $"{NodeExecutable} {Path.Combine(NodeJsPath, "lib/node_modules/npm/bin/npm-cli.js")}";
-            }
-        }
+                workingDirectory = GetWorkingDirectory();
+                distribName = GetDistribName();
+                distribFileName = $"{distribName}.{(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "zip" : "tar.gz")}";
+                distribFilePath = Path.Combine(workingDirectory.FullName, distribFileName);
+                nodeDirectoryPath = Path.Combine(workingDirectory.FullName, distribName);
+                lockfileFilePath = Path.Combine(nodeDirectoryPath, $"{GetDistribName()}.lock");
 
-        private void InitPathInfo()
-        {
-            _workingDirectory = GetWorkingDirectory();
-            _distribName = GetDistribName();
-            _distribFileName = $"{_distribName}.{(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "zip" : "tar.gz")}";
-            _distribFilePath = Path.Combine(_workingDirectory.FullName, _distribFileName);
-            _nodeDirectoryPath = Path.Combine(_workingDirectory.FullName, _distribName);
-            _lockfileFilePath = Path.Combine(_nodeDirectoryPath, $"{GetDistribName()}.lock");
+                distribHashSumUrl = new Uri($"{NodeUrl}/v{NodeJsVersion}/SHASUMS256.txt");
+                distribUrl = new Uri($"{NodeUrl}/v{NodeJsVersion}/{distribFileName}");
 
-            DirectoryInfo GetWorkingDirectory()
-            {
-                if (string.IsNullOrEmpty(WorkingDirectoryPath))
-                    throw new Exception("NodePath property is invalid.");
+                DirectoryInfo GetWorkingDirectory()
+                {
+                    if (string.IsNullOrEmpty(WorkingDirectoryPath))
+                        throw new Exception("NodePath property is invalid.");
 
-                return !Directory.Exists(WorkingDirectoryPath) ?
-                    Directory.CreateDirectory(WorkingDirectoryPath) :
-                    new DirectoryInfo(WorkingDirectoryPath);
+                    return !Directory.Exists(WorkingDirectoryPath) ?
+                        Directory.CreateDirectory(WorkingDirectoryPath) :
+                        new DirectoryInfo(WorkingDirectoryPath);
+                }
+
+                string GetDistribName()
+                {
+                    if (string.IsNullOrEmpty(NodeJsVersion) && VersionRegex.IsMatch(NodeJsVersion))
+                        throw new Exception("NodeJsVersion property value is invalid.");
+
+                    return $"node-v{NodeJsVersion}-{OSVersion}-{OSArchitecture}";
+                }
             }
 
-            string GetDistribName()
+            bool NodeJSExist()
             {
-                if (string.IsNullOrEmpty(NodeJsVersion) && VersionRegex.IsMatch(NodeJsVersion))
-                    throw new Exception("NodeJsVersion property value is invalid.");
+                if (File.Exists(lockfileFilePath))
+                    return File.ReadAllText(lockfileFilePath) == NodeJsVersion;
 
-                return $"node-v{NodeJsVersion}-{OSVersion}-{OSArchitecture}";
-            }
-        }
-
-        private bool NodeJSExist()
-        {
-            if (File.Exists(_lockfileFilePath))
-                return File.ReadAllText(_lockfileFilePath) == NodeJsVersion;
-
-            return false;
-        }
-
-        private bool NodeJSDownloaded()
-        {
-            if (!File.Exists(_distribFilePath))
                 return false;
+            }            
 
-            var fileHashSum = CalculateFileHashSum(_distribFilePath).ToLower();
-            Log.LogMessage($"Calcualted hash sum {fileHashSum}.");
-
-            Log.LogMessage($"Downloading NodeJS hash sum file.");
-            var wellknownHashSum = GetWellknownHashSum(_distribFileName.ToLower(), DistribHashSumUrl);
-            Log.LogMessage($"Found hash sum {wellknownHashSum}.");
-
-            return fileHashSum == wellknownHashSum;
-
-            static string CalculateFileHashSum(string filePath)
+            bool NodeJSDownloaded()
             {
-                using var stream = File.OpenRead(filePath);
-                using var algorithm = SHA256.Create();
-                var hash = algorithm.ComputeHash(stream);
+                if (!File.Exists(distribFilePath))
+                    return false;
 
-                return ConvertByteArrayToHex(hash);
+                var fileHashSum = CalculateFileHashSum(distribFilePath).ToLower();
+                Log.LogMessage($"Calcualted hash sum {fileHashSum}.");
 
-                static string ConvertByteArrayToHex(byte[] bytes)
+                Log.LogMessage($"Downloading NodeJS hash sum file.");
+                var wellknownHashSum = GetWellknownHashSum(distribFileName.ToLower(), distribHashSumUrl);
+                Log.LogMessage($"Found hash sum {wellknownHashSum}.");
+
+                return fileHashSum == wellknownHashSum;
+
+                static string CalculateFileHashSum(string filePath)
                 {
-                    var sb = new StringBuilder();
-                    foreach (var b in bytes)
-                        sb.AppendFormat("{0:X2}", b);
+                    using var stream = File.OpenRead(filePath);
+                    using var algorithm = SHA256.Create();
+                    var hash = algorithm.ComputeHash(stream);
 
-                    return sb.ToString();
-                }
-            }
+                    return ConvertByteArrayToHex(hash);
 
-            static string GetWellknownHashSum(string fileName, Uri hashsumFileUri)
-            {
-                using var memoryStream = new MemoryStream();
-                DownloadFile(hashsumFileUri, memoryStream);
-                memoryStream.Seek(0, SeekOrigin.Begin);
-
-                using var reader = new StreamReader(memoryStream);
-                while (!reader.EndOfStream)
-                {
-                    var line = reader.ReadLine().ToLower();
-                    if (line.EndsWith(fileName))
-                        return line
-                            .Substring(0, line.Length - fileName.Length)
-                            .Trim();
-                }
-                throw new Exception($"No information found about {fileName} in hashsum file.");
-            }
-        }
-
-        private void DownloadNodeJS()
-        {
-            Log.LogMessage($"Downloading NodeJS from {DistribUrl}");
-
-            using (var distribFile = new FileStream(_distribFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                DownloadFile(DistribUrl, distribFile);
-            }
-
-            if (!NodeJSDownloaded())
-                throw new Exception("Downloaded NodeJS distrib is corrupted.");
-        }
-
-        private void UnpackNodeJS()
-        {
-            ClearTargetDirectory();
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Log.LogMessage($"Unzipping {_distribFilePath}...");
-                ZipFile.ExtractToDirectory(_distribFilePath, _workingDirectory.FullName);
-            }
-            else
-            {
-                Log.LogMessage($"Unpacking {_distribFilePath} using tar...");
-                var process = new Process()
-                {
-                    StartInfo = new ProcessStartInfo
+                    static string ConvertByteArrayToHex(byte[] bytes)
                     {
-                        FileName = "tar",
-                        Arguments = $" -xzf {_distribFilePath}",
-                        WorkingDirectory = _workingDirectory.FullName,
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
+                        var sb = new StringBuilder();
+                        foreach (var b in bytes)
+                            sb.AppendFormat("{0:X2}", b);
+
+                        return sb.ToString();
                     }
-                };
-                process.Start();
-                process.WaitForExit();
-            }
+                }
 
-            WriteLockFile(_lockfileFilePath, NodeJsVersion);
-
-            void ClearTargetDirectory()
-            {
-                if (Directory.Exists(_nodeDirectoryPath))
+                static string GetWellknownHashSum(string fileName, Uri hashsumFileUri)
                 {
-                    Log.LogMessage($"Clear target directory {_nodeDirectoryPath}...");
-                    Directory.Delete(_nodeDirectoryPath, true);
+                    using var memoryStream = new MemoryStream();
+                    DownloadFile(hashsumFileUri, memoryStream);
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+
+                    using var reader = new StreamReader(memoryStream);
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine().ToLower();
+                        if (line.EndsWith(fileName))
+                            return line
+                                .Substring(0, line.Length - fileName.Length)
+                                .Trim();
+                    }
+                    throw new Exception($"No information found about {fileName} in hashsum file.");
                 }
             }
 
-            static void WriteLockFile(string path, string version)
+            void DownloadNodeJS()
             {
-                using var writer = File.CreateText(path);
-                writer.Write(version);
+                Log.LogMessage($"Downloading NodeJS from {distribUrl}");
+
+                using (var distribFile = new FileStream(distribFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    DownloadFile(distribUrl, distribFile);
+                }
+
+                if (!NodeJSDownloaded())
+                    throw new Exception("Downloaded NodeJS distrib is corrupted.");
+            }
+
+            void UnpackNodeJS()
+            {
+                ClearTargetDirectory();
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    Log.LogMessage($"Unzipping {distribFilePath}...");
+                    ZipFile.ExtractToDirectory(distribFilePath, workingDirectory.FullName);
+                }
+                else
+                {
+                    Log.LogMessage($"Unpacking {distribFilePath} using tar...");
+                    var process = new Process()
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = "tar",
+                            Arguments = $" -xzf {distribFilePath}",
+                            WorkingDirectory = workingDirectory.FullName,
+                            RedirectStandardOutput = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        }
+                    };
+                    process.Start();
+                    process.WaitForExit();
+                }
+
+                WriteLockFile(lockfileFilePath, NodeJsVersion);
+
+                void ClearTargetDirectory()
+                {
+                    if (Directory.Exists(nodeDirectoryPath))
+                    {
+                        Log.LogMessage($"Clear target directory {nodeDirectoryPath}...");
+                        Directory.Delete(nodeDirectoryPath, true);
+                    }
+                }
+
+                static void WriteLockFile(string path, string version)
+                {
+                    using var writer = File.CreateText(path);
+                    writer.Write(version);
+                }
+            }
+
+            void SetOutputProperties()
+            {
+                NodeJsPath = nodeDirectoryPath;
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    GlobalNodeModulesPath = Path.Combine(NodeJsPath, "node_modules");
+                    NodeExecutable = Path.Combine(NodeJsPath, "node.exe");
+                    NPMExecutable = Path.Combine(NodeJsPath, "npm.cmd");
+                }
+                else
+                {
+                    GlobalNodeModulesPath = Path.Combine(NodeJsPath, "lib", "node_modules");
+                    NodeExecutable = Path.Combine(NodeJsPath, "bin", "node");
+                    NPMExecutable = $"{NodeExecutable} {Path.Combine(NodeJsPath, "lib/node_modules/npm/bin/npm-cli.js")}";
+                }
             }
         }
 
