@@ -7,19 +7,21 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VersionPrefix>2.1.0</VersionPrefix>
-    <VersionSuffix>jstest</VersionSuffix>
+    <VersionPrefix>2.0.4</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Adeptik.SemanticVersion" Version="1.0.0" />
     <PackageReference Include="Microsoft.Build.Framework" Version="15.1.1012" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012" PrivateAssets="All" />    
   </ItemGroup>
 
   <ItemGroup>
     <None Include="..\LICENSE" Pack="True" PackagePath="" />
+    <None Include="images\icon.png" Pack="true" PackagePath="" />
 
+    <None Include="_._" Pack="True" PackagePath="lib/netstandard1.5/" />
+    
     <None Include="targets\build\Adeptik.NodeJs.Redistributable.props" Pack="True" PackagePath="build/" />
     <None Include="targets\build\Adeptik.NodeJs.Redistributable.targets" Pack="True" PackagePath="build/" />
     <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.props" Pack="True" PackagePath="buildMultiTargeting/" />
@@ -33,7 +35,7 @@
     <RepositoryType>GitHub</RepositoryType>
     <RepositoryUrl>https://github.com/SnrdTeam/msbuild-nodejs-redistributable</RepositoryUrl>
     <Copyright>Copyright © Adeptik LLC</Copyright>
-    <PackageIconUrl>https://raw.githubusercontent.com/SnrdTeam/snrd-icons/master/development-icons/dotnet-icon%4064.png</PackageIconUrl>
+    <PackageIcon>icon.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
   </PropertyGroup>
