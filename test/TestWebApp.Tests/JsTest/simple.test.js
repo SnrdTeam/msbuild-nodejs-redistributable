@@ -1,9 +1,9 @@
-﻿import 'jasmine';
+﻿var sitejs = require('../../TestWebApp/wwwroot/js/site');
 
 describe("SampleSuite", () => {
     describe("SampleTest", () => {
         it("should be ok", () => {
-            expect(true).toEqual(true);
+            expect(sitejs.add(2, 2)).toEqual(4);
         });
     });
 });

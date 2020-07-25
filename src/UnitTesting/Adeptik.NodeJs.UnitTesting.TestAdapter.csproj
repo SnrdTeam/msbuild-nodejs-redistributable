@@ -15,13 +15,17 @@
   <ItemGroup>
     <PackageReference Include="Adeptik.SemanticVersion" Version="1.0.0" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.5.0" />
+    <PackageReference Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
     <None Include="images\icon.png" Pack="true" PackagePath="" />
 
-    <None Include="targets\build\Adeptik.NodeJs.UnitTesting.TestAdapter.props" Pack="True" PackagePath="build/netstandard2.0/" />
+    <None Include="targets\build\Adeptik.NodeJs.UnitTesting.TestAdapter.props" Pack="True" PackagePath="build/" />
+    <None Include="targets\build\Adeptik.NodeJs.UnitTesting.TestAdapter.targets" Pack="True" PackagePath="build/" />
+    <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.UnitTesting.TestAdapter.props" Pack="True" PackagePath="buildMultiTargeting/" />
+    <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.UnitTesting.TestAdapter.targets" Pack="True" PackagePath="buildMultiTargeting/" />
   </ItemGroup>
 
   <PropertyGroup>

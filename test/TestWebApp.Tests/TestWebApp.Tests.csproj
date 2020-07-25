@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="YarnInstall">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -16,6 +16,7 @@
 
   <PropertyGroup>
     <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+    <YarnBuildCommand>build</YarnBuildCommand>
   </PropertyGroup>
-  
+
 </Project>

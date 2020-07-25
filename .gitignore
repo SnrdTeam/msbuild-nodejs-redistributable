@@ -5,3 +5,6 @@
 /**/bin
 /**/obj
 /**/node_modules  
+/**/yarn-error.log
+/**/TestResults
+*.user
