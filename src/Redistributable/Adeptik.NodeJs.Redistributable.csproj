@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VersionPrefix>2.0.4</VersionPrefix>
+    <VersionPrefix>2.1.0</VersionPrefix>
+    <VersionSuffix>jasminetest</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>

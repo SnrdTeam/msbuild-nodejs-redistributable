@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using Adeptik.NodeJs.UnitTesting.TestAdapter.Utils;
 
 namespace Adeptik.NodeJs.UnitTesting.TestAdapter
@@ -108,7 +107,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                 random = false
             };
 
-            File.WriteAllText ($"{runContext.TestRunDirectory}/jasmine.json", JsonSerializer.Serialize(jasmineConfig));
+            //File.WriteAllText ($"{runContext.TestRunDirectory}/jasmine.json", JsonSerializer.Serialize(jasmineConfig));
         }
 
         /// <inheritdoc/>

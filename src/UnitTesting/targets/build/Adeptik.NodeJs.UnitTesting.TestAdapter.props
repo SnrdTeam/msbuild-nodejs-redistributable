@@ -6,7 +6,7 @@
     generated assembly even though we don't require the assembly.
   -->
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)Adeptik.NodeJs.UnitTesting.TestAdapter.dll">
+    <Content Include="$(MSBuildThisFileDirectory)/../lib/netstandard1.5/Adeptik.NodeJs.UnitTesting.TestAdapter.dll">
       <Link>Adeptik.NodeJs.UnitTesting.TestAdapter.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>

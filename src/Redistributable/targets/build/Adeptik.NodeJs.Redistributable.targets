@@ -8,10 +8,10 @@
     <GlobalNodeModulesPath></GlobalNodeModulesPath>
     <NodeExecutable></NodeExecutable>
     <NPMExecutable></NPMExecutable>
-    
+
     <YarnExecutable></YarnExecutable>
   </PropertyGroup>
-  
+
   <!-- Download NodeJS distrib & unpack -->
   <Target Name="InstallNodeJs">
     <Error Text="NodeJsDistVersion property not set." Condition="'$(NodeJsDistVersion)' == ''" />
@@ -55,4 +55,20 @@
     <CoreCompileDependsOn>$(CoreCompileDependsOn);YarnRun</CoreCompileDependsOn>
   </PropertyGroup>
 
+  <!-- Install jasmine using NPM -->
+  <Target Name="InstallJasmine" DependsOnTargets="InstallNodeJs">
+    <Exec Command="$(NPMExecutable) install -g jasmine@$(JasmineVersion)"
+          WorkingDirectory="$(NodeJsPath)"
+          ConsoleToMSBuild="True"/>
+    <PropertyGroup>
+      <JasmineExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)/jasmine/bin/jasmine.js</JasmineExecutable>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Generate Jasmine test run config -->
+  <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallJasmine"  AfterTargets="Build">
+    <GenerateJasmineConfig BuildPath="$(OutDir)"/>
+    <WriteLinesToFile File="$(OutDir)jasmine.cmd" Overwrite="true"
+      Lines="$(JasmineExecutable)" />
+  </Target>
 </Project>
