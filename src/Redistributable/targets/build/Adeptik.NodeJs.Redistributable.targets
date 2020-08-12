@@ -23,27 +23,24 @@
     </InstallNodeJs>
     <Message Text="Working with NodeJS at $(NodeJsPath)"/>
   </Target>
-
-  <!-- Install yarn using NPM -->
-  <Target Name="InstallYarn" DependsOnTargets="InstallNodeJs">
-    <Exec Command="$(NPMExecutable) install -g yarn@$(YarnVersion)"
-          WorkingDirectory="$(NodeJsPath)"
-          ConsoleToMSBuild="True"
-    />
-    <PropertyGroup>
-      <YarnExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)/yarn/bin/yarn.js</YarnExecutable>
-    </PropertyGroup>
+  
+  <!-- Install globally libs (YARN and Jasmine) -->
+  <Target Name="InstallGlobalLibs" DependsOnTargets="InstallNodeJs">
+    <InstallGlobalLibs NodeExecutable="$(NodeExecutable)" GlobalNodeModulesPath="$(GlobalNodeModulesPath)" NPMExecutable="$(NPMExecutable)" JasmineVersion="$(JasmineVersion)" YarnVersion="$(YarnVersion)">
+      <Output TaskParameter="YarnExecutable" PropertyName="YarnExecutable"/>
+      <Output TaskParameter="JasmineExecutable" PropertyName="JasmineExecutable"/>
+    </InstallGlobalLibs>
   </Target>
 
   <!-- Install project packages using yarn -->
-  <Target Name="YarnInstall" DependsOnTargets="InstallYarn">
+  <Target Name="YarnInstall" DependsOnTargets="InstallGlobalLibs">
     <Exec Command="$(YarnExecutable) install"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           ConsoleToMSBuild="True" />
   </Target>
 
   <!-- Run yarn command if specified -->
-  <Target Name="YarnRun" DependsOnTargets="YarnInstall"  BeforeTargets="CoreCompile" Condition="'$(YarnBuildCommand)' != '' ">
+  <Target Name="YarnRun" DependsOnTargets="InstallGlobalLibs"  BeforeTargets="CoreCompile" Condition="'$(YarnBuildCommand)' != '' ">
     <Exec Command="$(YarnExecutable) $(YarnBuildCommand)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           ConsoleToMSBuild="True" />
@@ -55,18 +52,8 @@
     <CoreCompileDependsOn>$(CoreCompileDependsOn);YarnRun</CoreCompileDependsOn>
   </PropertyGroup>
 
-  <!-- Install jasmine using NPM -->
-  <Target Name="InstallJasmine" DependsOnTargets="InstallNodeJs">
-    <Exec Command="$(NPMExecutable) install -g jasmine@$(JasmineVersion)"
-          WorkingDirectory="$(NodeJsPath)"
-          ConsoleToMSBuild="True"/>
-    <PropertyGroup>
-      <JasmineExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)/jasmine/bin/jasmine.js</JasmineExecutable>
-    </PropertyGroup>
-  </Target>
-
   <!-- Generate Jasmine test run config -->
-  <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallJasmine"  AfterTargets="Build">
+  <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallGlobalLibs"  AfterTargets="Build">
     <GenerateJasmineConfig BuildPath="$(OutDir)"/>
     <WriteLinesToFile File="$(OutDir)jasmine.cmd" Overwrite="true"
       Lines="$(JasmineExecutable)" />

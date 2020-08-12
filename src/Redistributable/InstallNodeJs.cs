@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace Adeptik.NodeJs.Redistributable
 {
@@ -19,7 +20,7 @@ namespace Adeptik.NodeJs.Redistributable
     public class InstallNodeJs : Task
     {
         private static readonly Regex VersionRegex = new Regex(@"^\d+\.\d+\.\d+$", RegexOptions.Compiled);
-
+        private static readonly Mutex Mutex = new Mutex(false, "NodeMtx");
         private static readonly string OSVersion;
 
         private static readonly string OSArchitecture;
@@ -110,19 +111,17 @@ namespace Adeptik.NodeJs.Redistributable
             string lockfileFilePath;
             Uri distribHashSumUrl;
             Uri distribUrl;
-            
+
             try
             {
                 InitPathInfo();
-
+                Mutex.WaitOne();
                 if (!NodeJSExist())
                 {
                     if (!NodeJSDownloaded())
                         DownloadNodeJS();
-
                     UnpackNodeJS();
                 }
-
                 SetOutputProperties();
             }
             catch (Exception e)
@@ -132,6 +131,10 @@ namespace Adeptik.NodeJs.Redistributable
                     messages.Add(ex.Message);
 
                 Log.LogError(string.Join(" -> ", messages));
+            }
+            finally
+            {
+                Mutex.ReleaseMutex();
             }
 
             return !Log.HasLoggedErrors;

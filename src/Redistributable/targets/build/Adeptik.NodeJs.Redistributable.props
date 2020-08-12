@@ -12,6 +12,6 @@
 
   <!-- Register Task -->
   <UsingTask AssemblyFile="..\tools\netstandard1.5\Adeptik.NodeJs.Redistributable.dll" TaskName="Adeptik.NodeJs.Redistributable.InstallNodeJs" />
+  <UsingTask AssemblyFile="..\tools\netstandard1.5\Adeptik.NodeJs.Redistributable.dll" TaskName="Adeptik.NodeJs.Redistributable.InstallGlobalLibs" />
   <UsingTask AssemblyFile="..\tools\netstandard1.5\Adeptik.NodeJs.Redistributable.dll" TaskName="Adeptik.NodeJs.Redistributable.GenerateJasmineConfig" />
-
 </Project>
