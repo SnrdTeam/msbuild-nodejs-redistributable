@@ -24,7 +24,7 @@
     <Message Text="Working with NodeJS at $(NodeJsPath)"/>
   </Target>
   
-  <!-- Install globally YARN -->
+  <!-- Install YARN globally -->
   <Target Name="InstallYarn" DependsOnTargets="InstallNodeJs">
     <NPMInstallGlobal NodeExecutable="$(NodeExecutable)" NPMExecutable="$(NPMExecutable)" PackageName="yarn" PackageVersion="$(YarnVersion)" />
     <PropertyGroup>
@@ -52,7 +52,7 @@
     <CoreCompileDependsOn>$(CoreCompileDependsOn);YarnRun</CoreCompileDependsOn>
   </PropertyGroup>
 
-  <!-- Install globally Jasmine -->
+  <!-- Install Jasmine globally -->
   <Target Name="InstallJasmine" DependsOnTargets="InstallNodeJs">
     <NPMInstallGlobal NodeExecutable="$(NodeExecutable)" NPMExecutable="$(NPMExecutable)" PackageName="jasmine" PackageVersion="$(JasmineVersion)" />
     <PropertyGroup>

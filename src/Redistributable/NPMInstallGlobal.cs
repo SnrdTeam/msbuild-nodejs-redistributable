@@ -11,12 +11,6 @@ namespace Adeptik.NodeJs.Redistributable
     public class NPMInstallGlobal : Task
     {
         /// <summary>
-        /// Required command to execute nodejs
-        /// </summary>
-        [Required]
-        public string? NodeExecutable { get; private set; }
-
-        /// <summary>
         /// Required command to execute npm
         /// </summary>
         [Required]
