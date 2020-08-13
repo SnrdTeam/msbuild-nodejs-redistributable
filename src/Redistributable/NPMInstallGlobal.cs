@@ -15,12 +15,6 @@ namespace Adeptik.NodeJs.Redistributable
         /// </summary>
         [Required]
         public string? NodeExecutable { get; private set; }
-        
-        /// <summary>
-        /// Path to directory where installing packages
-        /// </summary>
-        [Required]
-        public string? GlobalNodeModulesPath { get; private set; }
 
         /// <summary>
         /// Required command to execute npm

@@ -26,7 +26,7 @@
   
   <!-- Install globally YARN -->
   <Target Name="InstallYarn" DependsOnTargets="InstallNodeJs">
-    <NPMInstallGlobal NodeExecutable="$(NodeExecutable)" GlobalNodeModulesPath="$(GlobalNodeModulesPath)" NPMExecutable="$(NPMExecutable)" PackageName="yarn" PackageVersion="$(YarnVersion)" />
+    <NPMInstallGlobal NodeExecutable="$(NodeExecutable)" NPMExecutable="$(NPMExecutable)" PackageName="yarn" PackageVersion="$(YarnVersion)" />
     <PropertyGroup>
       <YarnExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)/yarn/bin/yarn.js</YarnExecutable>
     </PropertyGroup>
@@ -54,7 +54,7 @@
 
   <!-- Install globally Jasmine -->
   <Target Name="InstallJasmine" DependsOnTargets="InstallNodeJs">
-    <NPMInstallGlobal NodeExecutable="$(NodeExecutable)" GlobalNodeModulesPath="$(GlobalNodeModulesPath)" NPMExecutable="$(NPMExecutable)" PackageName="jasmine" PackageVersion="$(JasmineVersion)" />
+    <NPMInstallGlobal NodeExecutable="$(NodeExecutable)" NPMExecutable="$(NPMExecutable)" PackageName="jasmine" PackageVersion="$(JasmineVersion)" />
     <PropertyGroup>
       <JasmineExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)/jasmine/bin/jasmine.js</JasmineExecutable>
     </PropertyGroup>
