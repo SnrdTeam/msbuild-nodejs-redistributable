@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Adeptik.NodeJs.Redistributable
 {
-    public class InstallGlobalLibs : Task
+    public class NPMInstallGlobal : Task
     {
         /// <summary>
         /// Required command to execute nodejs
@@ -17,7 +17,7 @@ namespace Adeptik.NodeJs.Redistributable
         public string? NodeExecutable { get; private set; }
         
         /// <summary>
-        /// Path to directory where installing libs
+        /// Path to directory where installing packages
         /// </summary>
         [Required]
         public string? GlobalNodeModulesPath { get; private set; }
@@ -32,45 +32,23 @@ namespace Adeptik.NodeJs.Redistributable
         /// Required jasmine version
         /// </summary>
         [Required]
-        public string? JasmineVersion { get; private set; }
+        public string? PackageVersion { get; private set; }
 
         /// <summary>
-        /// Required yarn version
+        /// Require package
         /// </summary>
         [Required]
-        public string? YarnVersion { get; private set; }
+        public string? PackageName { get; private set; }
 
         /// <summary>
-        /// Return path to yarn executable file
+        /// Mutex for creating critical section in installation packages time
         /// </summary>
-        [Output]
-        public string? YarnExecutable { get; private set; }
-
-        /// <summary>
-        /// Return path to jasmine executable file
-        /// </summary>
-        [Output]
-        public string? JasmineExecutable { get; private set; }
-
-        /// <summary>
-        /// Mutex for creating critical section in installation libs time
-        /// </summary>
-        private static readonly Mutex Mutex = new Mutex(false, "MtxLib");
+        private static readonly Mutex InstallPackagesMutex = new Mutex(false, "MtxPackage");
 
         /// <summary>
         /// Install globally argument for npm
         /// </summary>
         private const string ArgumentForNpm = "install -g";
-        
-        /// <summary>
-        /// Path to installed yarn
-        /// </summary>
-        private const string LocallyPathToYarn = "/yarn/bin/yarn.js";
-        
-        /// <summary>
-        /// Path to installed jasmine
-        /// </summary>
-        private const string LocallyPathToJasmine = "/jasmine/bin/jasmine.js";
        
         /// <summary>
         /// Waiting time for executable process
@@ -79,16 +57,17 @@ namespace Adeptik.NodeJs.Redistributable
 
         public override bool Execute()
         {
-            Mutex.WaitOne();
-            InstallLib("yarn", YarnVersion ?? "latest");
-            InstallLib("jasmine", JasmineVersion ?? "latest");
-            Mutex.ReleaseMutex();
-            YarnExecutable = GetExecutableCommand(LocallyPathToYarn);
-            JasmineExecutable = GetExecutableCommand(LocallyPathToJasmine);
+            if (PackageName == null)
+            {
+                throw new NullReferenceException("Package name not specified");
+            }
+            InstallPackagesMutex.WaitOne();
+            InstallPackage(PackageName, PackageVersion ?? "latest");
+            InstallPackagesMutex.ReleaseMutex();
             return !Log.HasLoggedErrors;
         }
 
-        private void InstallLib(string packageName, string version)
+        private void InstallPackage(string packageName, string version)
         {
             Log.LogMessage($"Start installing: {packageName} - Version: {version}");
             var NPMProcess = Process.Start(NPMExecutable, CreateNPMArguments($"{packageName}@{version}"));
@@ -97,11 +76,8 @@ namespace Adeptik.NodeJs.Redistributable
                 Log.LogError("Installation TimeOut");
                 NPMProcess.Kill();
             }
-            Log.LogMessage($"Finish installing: {packageName} - Version {version}");
+            Log.LogMessage($"Finish installing: {packageName} - Version: {version}");
         }
-
-        private string GetExecutableCommand(string locallyPath)
-            => $"{NodeExecutable} {GlobalNodeModulesPath}{locallyPath}";
 
         private string CreateNPMArguments(string packageName)
             => $"{ArgumentForNpm} {packageName}";

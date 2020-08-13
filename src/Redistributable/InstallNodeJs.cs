@@ -20,7 +20,7 @@ namespace Adeptik.NodeJs.Redistributable
     public class InstallNodeJs : Task
     {
         private static readonly Regex VersionRegex = new Regex(@"^\d+\.\d+\.\d+$", RegexOptions.Compiled);
-        private static readonly Mutex Mutex = new Mutex(false, "NodeMtx");
+        private static readonly Mutex NodeInstallMutex = new Mutex(false, "NodeMtx");
         private static readonly string OSVersion;
 
         private static readonly string OSArchitecture;
@@ -115,7 +115,7 @@ namespace Adeptik.NodeJs.Redistributable
             try
             {
                 InitPathInfo();
-                Mutex.WaitOne();
+                NodeInstallMutex.WaitOne();
                 if (!NodeJSExist())
                 {
                     if (!NodeJSDownloaded())
@@ -134,7 +134,7 @@ namespace Adeptik.NodeJs.Redistributable
             }
             finally
             {
-                Mutex.ReleaseMutex();
+                NodeInstallMutex.ReleaseMutex();
             }
 
             return !Log.HasLoggedErrors;
