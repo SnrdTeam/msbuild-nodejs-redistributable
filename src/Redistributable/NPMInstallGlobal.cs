@@ -29,11 +29,6 @@ namespace Adeptik.NodeJs.Redistributable
         public string? PackageName { get; private set; }
 
         /// <summary>
-        /// Mutex for creating critical section in installation packages time
-        /// </summary>
-        private static readonly Mutex InstallPackagesMutex = new Mutex(false, "MtxPackage");
-
-        /// <summary>
         /// Install globally argument for npm
         /// </summary>
         private const string ArgumentForNpm = "install -g";
@@ -49,16 +44,27 @@ namespace Adeptik.NodeJs.Redistributable
             {
                 throw new NullReferenceException("Package name not specified");
             }
-            InstallPackagesMutex.WaitOne();
+            using var installPackageMutex = new Mutex(false, $@"Global\{PackageName}{PackageVersion}");
+            installPackageMutex.WaitOne();
             InstallPackage(PackageName, PackageVersion ?? "latest");
-            InstallPackagesMutex.ReleaseMutex();
+            installPackageMutex.ReleaseMutex();
             return !Log.HasLoggedErrors;
         }
 
         private void InstallPackage(string packageName, string version)
         {
             Log.LogMessage($"Start installing: {packageName} - Version: {version}");
-            var NPMProcess = Process.Start(NPMExecutable, CreateNPMArguments($"{packageName}@{version}"));
+            var NPMProcess = new Process()
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = NPMExecutable,
+                    Arguments = CreateNPMArguments($"{packageName}@{version}"),
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
             if(!NPMProcess.WaitForExit(WaitingTime))
             {
                 Log.LogError("Installation TimeOut");
