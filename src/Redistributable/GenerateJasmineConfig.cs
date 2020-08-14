@@ -36,7 +36,7 @@ namespace Adeptik.NodeJs.Redistributable
 
             var jsonStringBuilder = new StringBuilder();
             jsonStringBuilder.AppendLine("{");
-            jsonStringBuilder.AppendLine("\t\"spec_dir\": \".\"");
+            jsonStringBuilder.AppendLine("\t\"spec_dir\": \".\",");
             jsonStringBuilder.AppendLine("\t\"spec_files\": [");
             foreach (var testFile in testFiles)
                 jsonStringBuilder.AppendLine($"\t\t\t\"{testFile.Replace('\\','/')}\",");
