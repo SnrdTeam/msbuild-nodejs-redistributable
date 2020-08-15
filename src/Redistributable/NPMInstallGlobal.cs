@@ -3,6 +3,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading;
 
@@ -58,13 +59,14 @@ namespace Adeptik.NodeJs.Redistributable
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = NPMExecutable,
-                    Arguments = CreateNPMArguments($"{packageName}@{version}"),
+                    FileName = NPMExecutable.Split(' ')[0],
+                    Arguments = $"{NPMExecutable.Split(' ')[1]} {CreateNPMArguments($"{packageName}@{version}")}",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 }
             };
+            NPMProcess.Start();
             if(!NPMProcess.WaitForExit(WaitingTime))
             {
                 Log.LogError("Installation TimeOut");
