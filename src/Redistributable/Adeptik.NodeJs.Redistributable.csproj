@@ -28,6 +28,7 @@
     <None Include="targets\build\Adeptik.NodeJs.Redistributable.targets" Pack="True" PackagePath="build/" />
     <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.props" Pack="True" PackagePath="buildMultiTargeting/" />
     <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.targets" Pack="True" PackagePath="buildMultiTargeting/" />
+    <None Include="JasmineCustomReporter.js" Pack="true" PackagePath="JasmineCustomReporter.js" />
   </ItemGroup>
 
   <PropertyGroup>
