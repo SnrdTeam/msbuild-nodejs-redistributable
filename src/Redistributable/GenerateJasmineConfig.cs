@@ -38,8 +38,9 @@ namespace Adeptik.NodeJs.Redistributable
             jsonStringBuilder.AppendLine("{");
             jsonStringBuilder.AppendLine("\t\"spec_dir\": \".\",");
             jsonStringBuilder.AppendLine("\t\"spec_files\": [");
+            int fileNumber = 0;
             foreach (var testFile in testFiles)
-                jsonStringBuilder.AppendLine($"\t\t\t\"{testFile.Replace('\\','/')}\",");
+                jsonStringBuilder.AppendLine($"\t\t\t\"{testFile.Replace('\\','/')}\"{(fileNumber++ != testFiles.Count() - 1 ? "," : "")}");
             jsonStringBuilder.AppendLine("\t\t],");
             jsonStringBuilder.AppendLine("\t\"stopSpecOnExpectationFailure\": \"false\",");
             jsonStringBuilder.AppendLine("\t\"random\": \"false\"");
@@ -51,7 +52,7 @@ namespace Adeptik.NodeJs.Redistributable
 
             IEnumerable<string> FindTestFilesInBuildFolder()
             {
-                return Directory.GetFiles(BuildPath, $"*{JSTestExtension}", SearchOption.AllDirectories);
+                return Directory.EnumerateFiles(BuildPath, $"*{JSTestExtension}", SearchOption.AllDirectories);
             }
         }
 

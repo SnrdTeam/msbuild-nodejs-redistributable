@@ -55,12 +55,23 @@ namespace Adeptik.NodeJs.Redistributable
         private void InstallPackage(string packageName, string version)
         {
             Log.LogMessage($"Start installing: {packageName} - Version: {version}");
+            string executeFileName, arguments;
+            if(NPMExecutable!.Split(' ').Length > 1)
+            {
+                executeFileName = NPMExecutable.Split(' ')[0];
+                arguments = $"{NPMExecutable.Split(' ')[1]} {CreateNPMArguments($"{packageName}@{version}")}";
+            }
+            else
+	        {
+                executeFileName = NPMExecutable;
+                arguments = CreateNPMArguments($"{packageName}@{version}");
+	        }
             var NPMProcess = new Process()
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = NPMExecutable.Split(' ')[0],
-                    Arguments = $"{NPMExecutable.Split(' ')[1]} {CreateNPMArguments($"{packageName}@{version}")}",
+                    FileName = executeFileName,
+                    Arguments = arguments,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
