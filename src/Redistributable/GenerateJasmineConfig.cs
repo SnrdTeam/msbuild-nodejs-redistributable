@@ -52,7 +52,7 @@ namespace Adeptik.NodeJs.Redistributable
 
             IEnumerable<string> FindTestFilesInBuildFolder()
             {
-                return Directory.EnumerateFiles(BuildPath, $"*{JSTestExtension}", SearchOption.AllDirectories);
+                return Directory.EnumerateFiles(BuildPath, $"*{JSTestExtension}", SearchOption.AllDirectories).Select(localPath => Path.GetFullPath(localPath));
             }
         }
 
