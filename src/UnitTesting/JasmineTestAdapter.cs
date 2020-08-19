@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+﻿using Adeptik.NodeJs.UnitTesting.TestAdapter.Utils;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using System;
@@ -6,8 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Adeptik.NodeJs.UnitTesting.TestAdapter.Utils;
-using System.Text;
 
 namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 {
@@ -37,7 +36,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <summary>
         /// Test run is canceled?
         /// </summary>
-        private bool _canceled = false;
+        private bool _canceled;
 
         private IEnumerable<string> FindTestFilesInProject(string projectDir)
         {
@@ -67,15 +66,26 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private List<TestCase> DiscoverTests(string source)
         {
-            var jasmineResults = GetTestResultsFromJasmine(source);
+            var projectPath = Path.GetDirectoryName(source);
             List<TestCase> testCasesInProject = new List<TestCase>();
-            foreach (var jasmineResult in jasmineResults)
+
+            FindTestFilesInProject(projectPath).ToList().ForEach(testFile =>
             {
-                testCasesInProject.Add(new TestCase
+                var fullPathToTestFile = Path.Combine(projectPath, testFile);
+                var jasmineResults = GetTestResultsFromJasmine(source, fullPathToTestFile);
+                foreach (var jasmineResult in jasmineResults)
                 {
-                    DisplayName = jasmineResult.Item1
-                });
-            }
+                    var testCase = new TestCase(jasmineResult.Item1, new Uri(ExecutorUri), source)
+                    {
+                        CodeFilePath = fullPathToTestFile,
+
+                    };
+                    testCase.SetPropertyValue(TestResultProperties.Outcome, jasmineResult.Item2 == "passed" ? TestOutcome.Passed : TestOutcome.Failed);
+                    testCasesInProject.Add(testCase);
+                }
+
+            });
+
             return testCasesInProject;
         }
 
@@ -86,15 +96,16 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// Get test result
         /// </summary>
         /// <param name="source">Output project directory</param>
+        /// /// <param name="source">Unit tests file</param>
         /// <returns>List of unit test result. T1 is name of UnitTest, T2 is UnitTest's status</returns>
-        private List<Tuple<string, string>> GetTestResultsFromJasmine(string source)
+        private List<Tuple<string, string>> GetTestResultsFromJasmine(string source, string fileName)
         {
             var jasmineUnitTesting = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = GetPathToCmdJasmine(Directory.GetParent(source).FullName),
-                    Arguments = "/c",
+                    Arguments = $"/c {fileName}",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
@@ -104,14 +115,14 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
             jasmineUnitTesting.WaitForExit();
             var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
 
-            var clearOutputLines = ClearAndSplitOutput(rawResultFromJasmine).ToArray(); 
+            var clearOutputLines = ClearAndSplitOutput(rawResultFromJasmine).ToArray();
 
             var result = new List<Tuple<string, string>>();
             //The file format includes pairs of lines representing specs
             for (int i = 0; i < clearOutputLines.Length; i += 2)
             {
                 //(i): spec name, (i + 1): status
-                result.Add(new Tuple<string, string>(clearOutputLines[i], clearOutputLines[i + 1]));
+                result.Add(new Tuple<string, string>(clearOutputLines[i].Remove(0, 1), clearOutputLines[i + 1]));
             }
             return result;
         }
@@ -157,7 +168,20 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private void RunTestsWithJasmine(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, LoggerHelper log)
         {
-            
+            _canceled = false;
+            foreach (var test in tests)
+            {
+                if (_canceled)
+                {
+                    break;
+                }
+
+                var testResult = new TestResult(test)
+                {
+                    Outcome = (TestOutcome)test.GetPropertyValue(TestResultProperties.Outcome)
+                };
+                frameworkHandle.RecordResult(testResult);
+            }
         }
 
         /// <inheritdoc/>

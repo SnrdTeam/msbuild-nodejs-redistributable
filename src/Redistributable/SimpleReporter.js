@@ -1,5 +1,5 @@
-let suitesAndSpecs = [];
 var SimpleReporter = {
+
     //Empty
     jasmineStarted: function (suiteInfo) { },
 
@@ -13,25 +13,17 @@ var SimpleReporter = {
     jasmineDone: function (result) { },
 
     //Add suite's name to array
-    suiteDone: function (result) {
-        suitesAndSpecs.push(result.name);
-    },
+    suiteDone: function (result) { },
 
     specDone: function (result) {
-        //Get full name of spec's
-        let name = result.fullName;
         //Insert dot between construction's name
-        for (var i = 0; i < suitesAndSpecs.length; ++i) {
-            let indexSubStr = name.indexOf(suitesAndSpecs[i]);
-            if (indexSubStr != -1) {
-                name[indexSubStr + suitesAndSpecs[i].length] = ".";
-            }
-        }
         //Delete trailing spaces and replace remain spaces with underscores
-        console.log(name.trim().replace(' ', '_'));
+        let suits = result.fullName.replace(result.description, ' ').trim().replace(/ /g, '_');
+        let spec = result.description.trim().replace(/ /g, '_');
+
+        console.log(suits + '.' + spec);
         console.log(result.status);
     }
 
 };
-
 jasmine.getEnv().addReporter(SimpleReporter);
