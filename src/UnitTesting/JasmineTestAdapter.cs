@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Adeptik.NodeJs.UnitTesting.TestAdapter.Utils;
+using System.Text;
 
 namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 {
@@ -32,6 +33,11 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// Base uri used by test executor
         /// </summary>
         public const string ExecutorUri = "executor://JasmineTestExecutor/v1";
+
+        /// <summary>
+        /// Test run is canceled?
+        /// </summary>
+        private bool _canceled = false;
 
         private IEnumerable<string> FindTestFilesInProject(string projectDir)
         {
@@ -61,16 +67,67 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private List<TestCase> DiscoverTests(string source)
         {
-            var projectPath = Path.GetDirectoryName(source);
+            var jasmineResults = GetTestResultsFromJasmine(source);
+            List<TestCase> testCasesInProject = new List<TestCase>();
+            foreach (var jasmineResult in jasmineResults)
+            {
+                testCasesInProject.Add(new TestCase
+                {
+                    DisplayName = jasmineResult.Item1
+                });
+            }
+            return testCasesInProject;
+        }
 
-            return FindTestFilesInProject(projectPath)
-                .Select(testFile =>
-                    new TestCase(GetTestName(testFile), new Uri(ExecutorUri), source)
-                    {
-                        CodeFilePath = Path.Combine(projectPath, testFile)
-                    }).ToList();
+        private static string GetPathToCmdJasmine(string pathToBuildResult)
+            => Path.Combine(pathToBuildResult, "jasmine.cmd");
 
-            static string GetTestName(string file) => Path.GetFileNameWithoutExtension(file);
+        /// <summary>
+        /// Get test result
+        /// </summary>
+        /// <param name="source">Output project directory</param>
+        /// <returns>List of unit test result. T1 is name of UnitTest, T2 is UnitTest's status</returns>
+        private List<Tuple<string, string>> GetTestResultsFromJasmine(string source)
+        {
+            var jasmineUnitTesting = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = GetPathToCmdJasmine(Directory.GetParent(source).FullName),
+                    Arguments = "/c",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            jasmineUnitTesting.Start();
+            jasmineUnitTesting.WaitForExit();
+            var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
+
+            var clearOutputLines = ClearAndSplitOutput(rawResultFromJasmine).ToArray(); 
+
+            var result = new List<Tuple<string, string>>();
+            //The file format includes pairs of lines representing specs
+            for (int i = 0; i < clearOutputLines.Length; i += 2)
+            {
+                //(i): spec name, (i + 1): status
+                result.Add(new Tuple<string, string>(clearOutputLines[i], clearOutputLines[i + 1]));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Remove all jasmine debug info and split our output into separate lines
+        /// </summary>
+        /// <param name="output">Program output</param>
+        /// <returns>Separate lines of program operation without debug output</returns>
+        private IEnumerable<string> ClearAndSplitOutput(string output)
+        {
+            const string startReporting = "Started\n";
+            const string endReporting = "\n\n\n";
+            var leftCut = output.Substring(output.IndexOf(startReporting) + startReporting.Length);
+            var rightCut = leftCut.Substring(0, leftCut.IndexOf(endReporting));
+            return rightCut.Split('\n');
         }
 
         /// <inheritdoc/>
@@ -100,19 +157,13 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private void RunTestsWithJasmine(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, LoggerHelper log)
         {
-            var jasmineConfig = new
-            {
-                spec_files = tests.Select(x => x.CodeFilePath).ToArray(),
-                stopSpecOnExpectationFailure = false,
-                random = false
-            };
-
-            //File.WriteAllText ($"{runContext.TestRunDirectory}/jasmine.json", JsonSerializer.Serialize(jasmineConfig));
+            
         }
 
         /// <inheritdoc/>
         public void Cancel()
         {
+            _canceled = true;
         }
     }
 }
