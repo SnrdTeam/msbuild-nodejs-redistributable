@@ -68,27 +68,41 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         {
             var projectPath = Path.GetDirectoryName(source);
             List<TestCase> testCasesInProject = new List<TestCase>();
-
-            FindTestFilesInProject(projectPath).ToList().ForEach(testFile =>
-            {
-                var fullPathToTestFile = Path.Combine(projectPath, testFile);
-                var jasmineResults = GetTestResultsFromJasmine(source, fullPathToTestFile);
-                foreach (var jasmineResult in jasmineResults)
-                {
-                    var testCase = new TestCase(jasmineResult.Item1, new Uri(ExecutorUri), source)
-                    {
-                        CodeFilePath = fullPathToTestFile,
-
-                    };
-                    testCase.SetPropertyValue(TestResultProperties.Outcome, jasmineResult.Item2 == "passed" ? TestOutcome.Passed : TestOutcome.Failed);
-                    testCasesInProject.Add(testCase);
-                }
-
-            });
-
-            return testCasesInProject;
+            var completedTestCases = GetTestCasesFromFiles(FindTestFilesInProject(projectPath)
+                .Select(file => Path.Combine(projectPath, file)), source).ToList();
+            return completedTestCases;
         }
+        
+        /// <summary>
+        /// Return completed test cases from files
+        /// </summary>
+        /// <param name="files">Unit Test files</param>
+        /// <param name="source">Output project directory</param>
+        /// <returns>List of test cases</returns>
+        private IEnumerable<TestCase> GetTestCasesFromFiles(IEnumerable<string> files, string source)
+            => files.SelectMany(file =>
+                {
+                    var jasmineResults = GetTestResultsFromJasmine(source, file);
+                    var testCases = new List<TestCase>();
+                    foreach (var jasmineResult in jasmineResults)
+                    {
+                        var testCase = new TestCase(jasmineResult.Item1, new Uri(ExecutorUri), source)
+                        {
+                            CodeFilePath = file,
+                        };
+                        testCase.SetPropertyValue(TestResultProperties.Outcome,
+                            jasmineResult.Item2 == "passed" ? TestOutcome.Passed : TestOutcome.Failed);
+                        testCases.Add(testCase);
+                    }
 
+                    return testCases;
+                });
+        
+        /// <summary>
+        /// Get path to jasmine executing script
+        /// </summary>
+        /// <param name="pathToBuildResult"></param>
+        /// <returns>Path to jasmine executing script</returns>
         private static string GetPathToCmdJasmine(string pathToBuildResult)
             => Path.Combine(pathToBuildResult, "jasmine.cmd");
 
@@ -96,9 +110,9 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// Get test result
         /// </summary>
         /// <param name="source">Output project directory</param>
-        /// /// <param name="source">Unit tests file</param>
-        /// <returns>List of unit test result. T1 is name of UnitTest, T2 is UnitTest's status</returns>
-        private List<Tuple<string, string>> GetTestResultsFromJasmine(string source, string fileName)
+        /// <param name="fileName">Unit tests file</param>
+        /// <returns>Collection of unit test result. T1 is name of UnitTest, T2 is UnitTest's status</returns>
+        private IEnumerable<Tuple<string, string>> GetTestResultsFromJasmine(string source, string fileName)
         {
             var jasmineUnitTesting = new Process
             {
@@ -119,7 +133,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
             var result = new List<Tuple<string, string>>();
             //The file format includes pairs of lines representing specs
-            for (int i = 0; i < clearOutputLines.Length; i += 2)
+            for (var i = 0; i < clearOutputLines.Length; i += 2)
             {
                 //(i): spec name, (i + 1): status
                 result.Add(new Tuple<string, string>(clearOutputLines[i].Remove(0, 1), clearOutputLines[i + 1]));
@@ -132,12 +146,12 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// </summary>
         /// <param name="output">Program output</param>
         /// <returns>Separate lines of program operation without debug output</returns>
-        private IEnumerable<string> ClearAndSplitOutput(string output)
+        private static IEnumerable<string> ClearAndSplitOutput(string output)
         {
             const string startReporting = "Started\n";
             const string endReporting = "\n\n\n";
-            var leftCut = output.Substring(output.IndexOf(startReporting) + startReporting.Length);
-            var rightCut = leftCut.Substring(0, leftCut.IndexOf(endReporting));
+            var leftCut = output.Substring(output.IndexOf(startReporting, StringComparison.Ordinal) + startReporting.Length);
+            var rightCut = leftCut.Substring(0, leftCut.IndexOf(endReporting, StringComparison.Ordinal));
             return rightCut.Split('\n');
         }
 
@@ -161,8 +175,16 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         {
             var log = new LoggerHelper(frameworkHandle, Stopwatch.StartNew());
             log.Log("Start test run for tests...");
-            RunTestsWithJasmine(tests, runContext, frameworkHandle, log);
+            var neededFilesWithSource = tests.Select(test => new Tuple<string, string>(test.Source, test.CodeFilePath)).Distinct().ToList();
+            List<TestCase> updatedTestCases = new List<TestCase>();
+            foreach (var source in neededFilesWithSource.Select(fileWithSource => fileWithSource.Item1))
+            {
+                var files = neededFilesWithSource.Where(fileWithSource => fileWithSource.Item1 == source)
+                    .Select(fileWithSource => fileWithSource.Item2);
+                updatedTestCases.AddRange(GetTestCasesFromFiles(files, source));
+            }
 
+            RunTestsWithJasmine(updatedTestCases.Where(test => tests.Contains(test)), runContext, frameworkHandle, log);
             log.Log("Test run complete.");
         }
 

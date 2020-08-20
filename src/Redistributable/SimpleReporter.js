@@ -1,4 +1,4 @@
-var SimpleReporter = {
+const SimpleReporter = {
 
     //Empty
     jasmineStarted: function (suiteInfo) { },
