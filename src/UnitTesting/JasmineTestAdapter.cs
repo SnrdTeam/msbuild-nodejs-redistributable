@@ -177,14 +177,13 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
             log.Log("Start test run for tests...");
             var neededFilesWithSource = tests.Select(test => new Tuple<string, string>(test.Source, test.CodeFilePath)).Distinct().ToList();
             List<TestCase> updatedTestCases = new List<TestCase>();
-            foreach (var source in neededFilesWithSource.Select(fileWithSource => fileWithSource.Item1))
+            foreach (var source in neededFilesWithSource.Select(fileWithSource => fileWithSource.Item1).Distinct())
             {
                 var files = neededFilesWithSource.Where(fileWithSource => fileWithSource.Item1 == source)
                     .Select(fileWithSource => fileWithSource.Item2);
                 updatedTestCases.AddRange(GetTestCasesFromFiles(files, source));
             }
-
-            RunTestsWithJasmine(updatedTestCases.Where(test => tests.Contains(test)), runContext, frameworkHandle, log);
+            RunTestsWithJasmine(updatedTestCases.Where(test => tests.Select(oldTest => oldTest.FullyQualifiedName).Contains(test.FullyQualifiedName)), runContext, frameworkHandle, log);
             log.Log("Test run complete.");
         }
 
