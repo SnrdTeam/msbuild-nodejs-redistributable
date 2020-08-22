@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 {
@@ -97,14 +98,16 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
                     return testCases;
                 });
-        
+
         /// <summary>
         /// Get path to jasmine executing script
         /// </summary>
         /// <param name="pathToBuildResult"></param>
         /// <returns>Path to jasmine executing script</returns>
         private static string GetPathToCmdJasmine(string pathToBuildResult)
-            => Path.Combine(pathToBuildResult, "jasmine.cmd");
+            => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? Path.Combine(pathToBuildResult, "jasmine.cmd")
+                : Path.Combine(pathToBuildResult, "jasmine.sh");
 
         /// <summary>
         /// Get test result
@@ -114,12 +117,24 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <returns>Collection of unit test result. T1 is name of UnitTest, T2 is UnitTest's status</returns>
         private IEnumerable<Tuple<string, string>> GetTestResultsFromJasmine(string source, string fileName)
         {
+            string processFileName, args;
+            var shellFile = GetPathToCmdJasmine(Directory.GetParent(source).FullName);
+            if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                processFileName = "/bin/sh";
+                args = $"{shellFile} {fileName}";
+            }
+            else
+            {
+                processFileName = shellFile;
+                args = $"/c {fileName}";
+            }
             var jasmineUnitTesting = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = GetPathToCmdJasmine(Directory.GetParent(source).FullName),
-                    Arguments = $"/c {fileName}",
+                    FileName = processFileName,
+                    Arguments = args,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
@@ -128,7 +143,8 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
             jasmineUnitTesting.Start();
             jasmineUnitTesting.WaitForExit();
             var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
-
+            File.WriteAllText(@"/home/guppy/shellFile.txt", $"CMD: {processFileName} -c {shellFile} {fileName}");
+            File.WriteAllText(@"/home/guppy/log.txt", rawResultFromJasmine);
             var clearOutputLines = ClearAndSplitOutput(rawResultFromJasmine).ToArray();
 
             var result = new List<Tuple<string, string>>();

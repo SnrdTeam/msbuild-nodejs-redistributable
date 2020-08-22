@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -56,14 +57,14 @@ namespace Adeptik.NodeJs.Redistributable
         {
             Log.LogMessage($"Start installing: {packageName} - Version: {version}");
             string executeFileName, arguments;
-            if(NPMExecutable!.Split(' ').Length > 1)
+            if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                executeFileName = NPMExecutable.Split(' ')[0];
+                executeFileName = NPMExecutable!.Split(' ')[0];
                 arguments = $"{NPMExecutable.Split(' ')[1]} {CreateNPMArguments($"{packageName}@{version}")}";
             }
             else
 	        {
-                executeFileName = NPMExecutable;
+                executeFileName = NPMExecutable!;
                 arguments = CreateNPMArguments($"{packageName}@{version}");
 	        }
             var NPMProcess = new Process()
