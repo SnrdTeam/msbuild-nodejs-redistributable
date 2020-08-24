@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Microsoft.Build.Framework;
+﻿using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using System.IO;
+using System.Text;
 
 namespace Adeptik.NodeJs.Redistributable
 {

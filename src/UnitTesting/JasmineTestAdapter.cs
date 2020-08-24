@@ -88,7 +88,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                 .Select(file => Path.Combine(projectPath, file)), source).ToList();
             return completedTestCases;
         }
-        
+
         /// <summary>
         /// Return completed test cases from files
         /// </summary>

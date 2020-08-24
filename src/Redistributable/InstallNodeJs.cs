@@ -88,9 +88,9 @@ namespace Adeptik.NodeJs.Redistributable
         /// Returns commandline to run npm
         /// </summary>
         [Output]
-        public string? NPMExecutable { get; private set; }        
+        public string? NPMExecutable { get; private set; }
 
-        private const string NodeUrl = "https://nodejs.org/download/release";           
+        private const string NodeUrl = "https://nodejs.org/download/release";
 
         /// <summary>
         /// Ensure that NodeJS downloaded & install yarn
@@ -176,7 +176,7 @@ namespace Adeptik.NodeJs.Redistributable
                     return File.ReadAllText(lockfileFilePath) == NodeJsVersion;
 
                 return false;
-            }            
+            }
 
             bool NodeJSDownloaded()
             {

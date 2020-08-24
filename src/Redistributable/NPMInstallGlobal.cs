@@ -1,11 +1,8 @@
 ﻿using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 
 namespace Adeptik.NodeJs.Redistributable
@@ -17,7 +14,7 @@ namespace Adeptik.NodeJs.Redistributable
         /// </summary>
         [Required]
         public string? NPMExecutable { get; private set; }
-        
+
         /// <summary>
         /// Required jasmine version
         /// </summary>
@@ -34,7 +31,7 @@ namespace Adeptik.NodeJs.Redistributable
         /// Install globally argument for npm
         /// </summary>
         private const string ArgumentForNpm = "install -g";
-       
+
         /// <summary>
         /// Waiting time for executable process
         /// </summary>
@@ -74,7 +71,7 @@ namespace Adeptik.NodeJs.Redistributable
                 }
             };
             NPMProcess.Start();
-            if(!NPMProcess.WaitForExit(WaitingTime))
+            if (!NPMProcess.WaitForExit(WaitingTime))
             {
                 Log.LogError("Installation TimeOut");
                 NPMProcess.Kill();
@@ -91,7 +88,7 @@ namespace Adeptik.NodeJs.Redistributable
         /// <returns>T1 - executing file name, T2 - </returns>
         private static Tuple<string, string> GetExecutingFileNameAndArguments(string NPMExecutableCommand, string packageName, string packageVersion)
         {
-            
+
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 var executeAndArgsCollection = NPMExecutableCommand.Split(' ');

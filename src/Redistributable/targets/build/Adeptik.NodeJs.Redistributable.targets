@@ -60,7 +60,7 @@
     </PropertyGroup>
   </Target>
 
-  <!-- Generate Jasmine test run config for wondows command shell -->
+  <!-- Generate Jasmine test run config for windows command shell -->
   <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallJasmine" AfterTargets="Build">
     <GenerateJasmineConfig BuildPath="$(OutDir)"/>
     <WriteLinesToFile File="$(OutDir)jasmine.cmd" Overwrite="true"
