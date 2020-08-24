@@ -56,23 +56,18 @@ namespace Adeptik.NodeJs.Redistributable
         private void InstallPackage(string packageName, string version)
         {
             Log.LogMessage($"Start installing: {packageName} - Version: {version}");
-            string executeFileName, arguments;
-            if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (NPMExecutable == null)
             {
-                executeFileName = NPMExecutable!.Split(' ')[0];
-                arguments = $"{NPMExecutable.Split(' ')[1]} {CreateNPMArguments($"{packageName}@{version}")}";
+                throw new NullReferenceException("Path to npm executable is not specified");
             }
-            else
-	        {
-                executeFileName = NPMExecutable!;
-                arguments = CreateNPMArguments($"{packageName}@{version}");
-	        }
+
+            var executeFileAndArgs = GetExecutingFileNameAndArguments(NPMExecutable, packageName, version);
             var NPMProcess = new Process()
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = executeFileName,
-                    Arguments = arguments,
+                    FileName = executeFileAndArgs.Item1,
+                    Arguments = executeFileAndArgs.Item2,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
@@ -87,7 +82,29 @@ namespace Adeptik.NodeJs.Redistributable
             Log.LogMessage($"Finish installing: {packageName} - Version: {version}");
         }
 
-        private string CreateNPMArguments(string packageName)
+        /// <summary>
+        /// Function get execute command for install NPM's package (exec file and args)
+        /// </summary>
+        /// <param name="NPMExecutableCommand">Full exec command</param>
+        /// <param name="packageName">Name of package in NPM</param>
+        /// <param name="packageVersion">Version of package in NPM</param>
+        /// <returns>T1 - executing file name, T2 - </returns>
+        private static Tuple<string, string> GetExecutingFileNameAndArguments(string NPMExecutableCommand, string packageName, string packageVersion)
+        {
+            
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var executeAndArgsCollection = NPMExecutableCommand.Split(' ');
+                if (executeAndArgsCollection.Length != 2)
+                {
+                    throw new FormatException("Path to the \".nuget\" directory contains spaces");
+                }
+                return new Tuple<string, string>(executeAndArgsCollection[0], $"{executeAndArgsCollection[1]} {CreateNPMArguments($"{packageName}@{packageVersion}")}");
+            }
+            return new Tuple<string, string>(NPMExecutableCommand, CreateNPMArguments($"{packageName}@{packageVersion}"));
+        }
+
+        private static string CreateNPMArguments(string packageName)
             => $"{ArgumentForNpm} {packageName}";
     }
 }

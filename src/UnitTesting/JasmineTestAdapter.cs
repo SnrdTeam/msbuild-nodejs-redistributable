@@ -35,6 +35,21 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         public const string ExecutorUri = "executor://JasmineTestExecutor/v1";
 
         /// <summary>
+        /// Default path to posix shell
+        /// </summary>
+        private const string DefaultPathToShell = "/bin/sh";
+
+        /// <summary>
+        /// Command line file for windows
+        /// </summary>
+        private const string CommandLineFile = "jasmine.cmd";
+
+        /// <summary>
+        /// Shell file for Posix
+        /// </summary>
+        private const string ShellFile = "jasmine.sh";
+
+        /// <summary>
         /// Test run is canceled?
         /// </summary>
         private bool _canceled;
@@ -106,8 +121,20 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <returns>Path to jasmine executing script</returns>
         private static string GetPathToCmdJasmine(string pathToBuildResult)
             => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? Path.Combine(pathToBuildResult, "jasmine.cmd")
-                : Path.Combine(pathToBuildResult, "jasmine.sh");
+                ? Path.Combine(pathToBuildResult, CommandLineFile)
+                : Path.Combine(pathToBuildResult, ShellFile);
+
+
+        /// <summary>
+        /// Function get exec file name and arguments for process
+        /// </summary>
+        /// <param name="shellFile">File contains shell script</param>
+        /// <param name="fileName">Unit tests file</param>
+        /// <returns>T1 - executing file, T2 - arguments for command line</returns>
+        private static Tuple<string, string> GetExecutingFileNameAndArguments(string shellFile, string fileName)
+            => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? new Tuple<string, string>(shellFile, $"/c {fileName}")
+                : new Tuple<string, string>(DefaultPathToShell, $"{shellFile} {fileName}");
 
         /// <summary>
         /// Get test result
@@ -117,24 +144,14 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <returns>Collection of unit test result. T1 is name of UnitTest, T2 is UnitTest's status</returns>
         private IEnumerable<Tuple<string, string>> GetTestResultsFromJasmine(string source, string fileName)
         {
-            string processFileName, args;
             var shellFile = GetPathToCmdJasmine(Directory.GetParent(source).FullName);
-            if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                processFileName = "/bin/sh";
-                args = $"{shellFile} {fileName}";
-            }
-            else
-            {
-                processFileName = shellFile;
-                args = $"/c {fileName}";
-            }
+            var executeFileAndArgs = GetExecutingFileNameAndArguments(shellFile, fileName);
             var jasmineUnitTesting = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = processFileName,
-                    Arguments = args,
+                    FileName = executeFileAndArgs.Item1,
+                    Arguments = executeFileAndArgs.Item2,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
@@ -150,10 +167,18 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
             for (var i = 0; i < clearOutputLines.Length; i += 2)
             {
                 //(i): spec name, (i + 1): status
-                result.Add(new Tuple<string, string>(clearOutputLines[i].Remove(0, 1), clearOutputLines[i + 1]));
+                result.Add(new Tuple<string, string>(RemoveFirstSimbol(clearOutputLines[i]), clearOutputLines[i + 1]));
             }
             return result;
         }
+
+        /// <summary>
+        /// Remove autogenerate by jasmine spec simbol
+        /// </summary>
+        /// <param name="specInputName">Spec name</param>
+        /// <returns>Spec name without first simbol</returns>
+        private static string RemoveFirstSimbol(string specInputName)
+            => specInputName.Remove(0, 1);
 
         /// <summary>
         /// Remove all jasmine debug info and split our output into separate lines
@@ -191,7 +216,8 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
             log.Log("Start test run for tests...");
             var neededFilesWithSource = tests.Select(test => new Tuple<string, string>(test.Source, test.CodeFilePath)).Distinct().ToList();
             List<TestCase> updatedTestCases = new List<TestCase>();
-            foreach (var source in neededFilesWithSource.Select(fileWithSource => fileWithSource.Item1).Distinct())
+            var uniqueSources = neededFilesWithSource.Select(fileWithSource => fileWithSource.Item1).Distinct();
+            foreach (var source in uniqueSources)
             {
                 var files = neededFilesWithSource.Where(fileWithSource => fileWithSource.Item1 == source)
                     .Select(fileWithSource => fileWithSource.Item2);

@@ -71,6 +71,6 @@
   <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallJasmine" AfterTargets="Build">
     <GenerateJasmineConfig BuildPath="$(OutDir)"/>
     <WriteLinesToFile File="$(OutDir)jasmine.sh" Overwrite="true"
-                      Lines="$(JasmineExecutable) --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\SimpleReporter.js $1" />
+                      Lines="$(JasmineExecutable) --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\reporters\SimpleReporter.js $1" />
   </Target>
 </Project>
