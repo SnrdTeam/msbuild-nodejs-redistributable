@@ -143,8 +143,6 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
             jasmineUnitTesting.Start();
             jasmineUnitTesting.WaitForExit();
             var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
-            File.WriteAllText(@"/home/guppy/shellFile.txt", $"CMD: {processFileName} -c {shellFile} {fileName}");
-            File.WriteAllText(@"/home/guppy/log.txt", rawResultFromJasmine);
             var clearOutputLines = ClearAndSplitOutput(rawResultFromJasmine).ToArray();
 
             var result = new List<Tuple<string, string>>();
