@@ -61,7 +61,7 @@
   </Target>
 
   <!-- Generate Jasmine test run config for shell -->
-  <Target Name="GenerateJasmineConfigAndStartupForWindows" DependsOnTargets="InstallJasmine" AfterTargets="Build">
+  <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallJasmine" AfterTargets="Build">
     <GenerateJasmineConfig BuildPath="$(OutDir)"/>
     <WriteLinesToFile File="$(OutDir)jasmine.cmd" Overwrite="true"
       Lines="$(JasmineExecutable) --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\reporters\SimpleReporter.js" />

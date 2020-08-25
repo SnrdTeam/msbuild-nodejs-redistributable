@@ -40,7 +40,7 @@ namespace Adeptik.NodeJs.Redistributable
             jsonStringBuilder.AppendLine("\t\"spec_files\": [");
             int fileNumber = 0;
             foreach (var testFile in testFiles)
-                jsonStringBuilder.AppendLine($"\t\t\t\"{testFile.Replace('\\','/')}\"{(fileNumber++ != testFiles.Count() - 1 ? "," : "")}");
+                jsonStringBuilder.AppendLine($"\t\t\t\"{testFile.Replace('\\', '/')}\"{(fileNumber++ != testFiles.Count() - 1 ? "," : "")}");
             jsonStringBuilder.AppendLine("\t\t],");
             jsonStringBuilder.AppendLine("\t\"stopSpecOnExpectationFailure\": \"false\",");
             jsonStringBuilder.AppendLine("\t\"random\": \"false\"");
