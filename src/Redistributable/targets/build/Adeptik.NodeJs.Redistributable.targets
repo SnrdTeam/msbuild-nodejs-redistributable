@@ -61,14 +61,14 @@
   </Target>
 
   <!-- Generate Jasmine test run config for windows command shell -->
-  <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallJasmine" AfterTargets="Build">
+  <Target Name="GenerateJasmineConfigAndStartupForWindows" DependsOnTargets="InstallJasmine" AfterTargets="Build">
     <GenerateJasmineConfig BuildPath="$(OutDir)"/>
     <WriteLinesToFile File="$(OutDir)jasmine.cmd" Overwrite="true"
-      Lines="$(JasmineExecutable) --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\SimpleReporter.js %2" />
+      Lines="$(JasmineExecutable) --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\reporters\SimpleReporter.js %2" />
   </Target>
 
   <!-- Generate Jasmine test run config for posix sh shell -->
-  <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallJasmine" AfterTargets="Build">
+  <Target Name="GenerateJasmineConfigAndStartupForPosix" DependsOnTargets="InstallJasmine" AfterTargets="Build">
     <GenerateJasmineConfig BuildPath="$(OutDir)"/>
     <WriteLinesToFile File="$(OutDir)jasmine.sh" Overwrite="true"
                       Lines="$(JasmineExecutable) --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\reporters\SimpleReporter.js $1" />

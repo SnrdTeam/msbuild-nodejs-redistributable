@@ -10,11 +10,6 @@ namespace Adeptik.NodeJs.Redistributable
     /// </summary>
     public class GenerateJasmineConfig : Task
     {
-        /*/// <summary>
-        /// Extension of test files
-        /// </summary>
-        public const string JSTestExtension = ".test.js";*/
-
         /// <summary>
         /// Path to compiled project
         /// </summary>

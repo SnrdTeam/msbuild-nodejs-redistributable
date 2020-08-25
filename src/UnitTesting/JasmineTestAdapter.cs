@@ -146,6 +146,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         {
             var shellFile = GetPathToCmdJasmine(Directory.GetParent(source).FullName);
             var executeFileAndArgs = GetExecutingFileNameAndArguments(shellFile, fileName);
+            File.WriteAllText(@"C:\Users\imurz\debug.txt", $"{executeFileAndArgs.Item1} {executeFileAndArgs.Item2}");
             var jasmineUnitTesting = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -160,6 +161,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
             jasmineUnitTesting.Start();
             jasmineUnitTesting.WaitForExit();
             var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
+            File.WriteAllText(@"C:\Users\imurz\log.txt", rawResultFromJasmine);
             var clearOutputLines = ClearAndSplitOutput(rawResultFromJasmine).ToArray();
 
             var result = new List<Tuple<string, string>>();
@@ -188,10 +190,22 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         private static IEnumerable<string> ClearAndSplitOutput(string output)
         {
             const string startReporting = "Started\n";
-            const string endReporting = "\n\n\n";
-            var leftCut = output.Substring(output.IndexOf(startReporting, StringComparison.Ordinal) + startReporting.Length);
-            var rightCut = leftCut.Substring(0, leftCut.IndexOf(endReporting, StringComparison.Ordinal));
+            const string endReporting = "\n\n";
+            var leftIndex = output.IndexOf(startReporting, StringComparison.Ordinal);
+            if (leftIndex == -1)
+            {
+                throw new FormatException("Invalid jasmine output format (Beginning Output)");
+            }
+            var leftCut = output.Substring(leftIndex + startReporting.Length);
+            var rigthIndex = leftCut.IndexOf(endReporting, StringComparison.Ordinal);
+            if (rigthIndex == -1)
+            {
+                throw new FormatException("Invalid jasmine output format (Ending Output)");
+            }
+            var rightCut = leftCut.Substring(0, rigthIndex);
             return rightCut.Split('\n');
+
+
         }
 
         /// <inheritdoc/>
