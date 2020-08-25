@@ -60,17 +60,10 @@
     </PropertyGroup>
   </Target>
 
-  <!-- Generate Jasmine test run config for windows command shell -->
+  <!-- Generate Jasmine test run config for shell -->
   <Target Name="GenerateJasmineConfigAndStartupForWindows" DependsOnTargets="InstallJasmine" AfterTargets="Build">
     <GenerateJasmineConfig BuildPath="$(OutDir)"/>
     <WriteLinesToFile File="$(OutDir)jasmine.cmd" Overwrite="true"
-      Lines="$(JasmineExecutable) --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\reporters\SimpleReporter.js %2" />
-  </Target>
-
-  <!-- Generate Jasmine test run config for posix sh shell -->
-  <Target Name="GenerateJasmineConfigAndStartupForPosix" DependsOnTargets="InstallJasmine" AfterTargets="Build">
-    <GenerateJasmineConfig BuildPath="$(OutDir)"/>
-    <WriteLinesToFile File="$(OutDir)jasmine.sh" Overwrite="true"
-                      Lines="$(JasmineExecutable) --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\reporters\SimpleReporter.js $1" />
+      Lines="$(JasmineExecutable) --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\reporters\SimpleReporter.js" />
   </Target>
 </Project>

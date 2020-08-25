@@ -40,25 +40,14 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         private const string DefaultPathToShell = "/bin/sh";
 
         /// <summary>
-        /// Command line file for windows
+        /// File containing commands for the operating system shell
         /// </summary>
-        private const string CommandLineFile = "jasmine.cmd";
-
-        /// <summary>
-        /// Shell file for Posix
-        /// </summary>
-        private const string ShellFile = "jasmine.sh";
+        private const string ShellFile = "jasmine.cmd";
 
         /// <summary>
         /// Test run is canceled?
         /// </summary>
         private bool _canceled;
-
-        private IEnumerable<string> FindTestFilesInProject(string projectDir)
-        {
-            return Directory.GetFiles(projectDir, $"*{JSTestExtension}").Union(
-                Directory.GetFiles(projectDir, $"*{TSTestExtension}"));
-        }
 
         /// <inheritdoc/>
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
@@ -82,37 +71,29 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private List<TestCase> DiscoverTests(string source)
         {
-            var projectPath = Path.GetDirectoryName(source);
-            List<TestCase> testCasesInProject = new List<TestCase>();
-            var completedTestCases = GetTestCasesFromFiles(FindTestFilesInProject(projectPath)
-                .Select(file => Path.Combine(projectPath, file)), source).ToList();
+            var completedTestCases = GetTestCasesFromSource(source).ToList();
             return completedTestCases;
         }
 
         /// <summary>
-        /// Return completed test cases from files
+        /// Return completed test cases from source
         /// </summary>
-        /// <param name="files">Unit Test files</param>
         /// <param name="source">Output project directory</param>
         /// <returns>List of test cases</returns>
-        private IEnumerable<TestCase> GetTestCasesFromFiles(IEnumerable<string> files, string source)
-            => files.SelectMany(file =>
-                {
-                    var jasmineResults = GetTestResultsFromJasmine(source, file);
-                    var testCases = new List<TestCase>();
-                    foreach (var jasmineResult in jasmineResults)
-                    {
-                        var testCase = new TestCase(jasmineResult.Item1, new Uri(ExecutorUri), source)
-                        {
-                            CodeFilePath = file,
-                        };
-                        testCase.SetPropertyValue(TestResultProperties.Outcome,
-                            jasmineResult.Item2 == "passed" ? TestOutcome.Passed : TestOutcome.Failed);
-                        testCases.Add(testCase);
-                    }
+        private IEnumerable<TestCase> GetTestCasesFromSource(string source)
+        {
+            var jasmineResults = GetTestResultsFromJasmine(source);
+            var testCases = new List<TestCase>();
+            foreach (var jasmineResult in jasmineResults)
+            {
+                var testCase = new TestCase(jasmineResult.Item1, new Uri(ExecutorUri), source);
+                testCase.SetPropertyValue(TestResultProperties.Outcome,
+                    jasmineResult.Item2 == "passed" ? TestOutcome.Passed : TestOutcome.Failed);
+                testCases.Add(testCase);
+            }
 
-                    return testCases;
-                });
+            return testCases;
+        }
 
         /// <summary>
         /// Get path to jasmine executing script
@@ -121,7 +102,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <returns>Path to jasmine executing script</returns>
         private static string GetPathToCmdJasmine(string pathToBuildResult)
             => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? Path.Combine(pathToBuildResult, CommandLineFile)
+                ? Path.Combine(pathToBuildResult, ShellFile)
                 : Path.Combine(pathToBuildResult, ShellFile);
 
 
@@ -129,24 +110,21 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// Function get exec file name and arguments for process
         /// </summary>
         /// <param name="shellFile">File contains shell script</param>
-        /// <param name="fileName">Unit tests file</param>
         /// <returns>T1 - executing file, T2 - arguments for command line</returns>
-        private static Tuple<string, string> GetExecutingFileNameAndArguments(string shellFile, string fileName)
+        private static Tuple<string, string> GetExecutingFileNameAndArguments(string shellFile)
             => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? new Tuple<string, string>(shellFile, $"/c {fileName}")
-                : new Tuple<string, string>(DefaultPathToShell, $"{shellFile} {fileName}");
+                ? new Tuple<string, string>(shellFile, String.Empty)
+                : new Tuple<string, string>(DefaultPathToShell, shellFile);
 
         /// <summary>
         /// Get test result
         /// </summary>
         /// <param name="source">Output project directory</param>
-        /// <param name="fileName">Unit tests file</param>
         /// <returns>Collection of unit test result. T1 is name of UnitTest, T2 is UnitTest's status</returns>
-        private IEnumerable<Tuple<string, string>> GetTestResultsFromJasmine(string source, string fileName)
+        private IEnumerable<Tuple<string, string>> GetTestResultsFromJasmine(string source)
         {
             var shellFile = GetPathToCmdJasmine(Directory.GetParent(source).FullName);
-            var executeFileAndArgs = GetExecutingFileNameAndArguments(shellFile, fileName);
-            File.WriteAllText(@"C:\Users\imurz\debug.txt", $"{executeFileAndArgs.Item1} {executeFileAndArgs.Item2}");
+            var executeFileAndArgs = GetExecutingFileNameAndArguments(shellFile);
             var jasmineUnitTesting = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -161,7 +139,6 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
             jasmineUnitTesting.Start();
             jasmineUnitTesting.WaitForExit();
             var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
-            File.WriteAllText(@"C:\Users\imurz\log.txt", rawResultFromJasmine);
             var clearOutputLines = ClearAndSplitOutput(rawResultFromJasmine).ToArray();
 
             var result = new List<Tuple<string, string>>();
@@ -228,14 +205,11 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         {
             var log = new LoggerHelper(frameworkHandle, Stopwatch.StartNew());
             log.Log("Start test run for tests...");
-            var neededFilesWithSource = tests.Select(test => new Tuple<string, string>(test.Source, test.CodeFilePath)).Distinct().ToList();
+            var uniqueSources = tests.Select(test => test.Source).Distinct();
             List<TestCase> updatedTestCases = new List<TestCase>();
-            var uniqueSources = neededFilesWithSource.Select(fileWithSource => fileWithSource.Item1).Distinct();
             foreach (var source in uniqueSources)
             {
-                var files = neededFilesWithSource.Where(fileWithSource => fileWithSource.Item1 == source)
-                    .Select(fileWithSource => fileWithSource.Item2);
-                updatedTestCases.AddRange(GetTestCasesFromFiles(files, source));
+                updatedTestCases.AddRange(DiscoverTests(source));
             }
             RunTestsWithJasmine(updatedTestCases.Where(test => tests.Select(oldTest => oldTest.FullyQualifiedName).Contains(test.FullyQualifiedName)), runContext, frameworkHandle, log);
             log.Log("Test run complete.");
