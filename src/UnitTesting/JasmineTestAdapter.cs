@@ -140,24 +140,15 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
             jasmineUnitTesting.WaitForExit();
             var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
             var clearOutputLines = ClearAndSplitOutput(rawResultFromJasmine).ToArray();
-
             var result = new List<Tuple<string, string>>();
             //The file format includes pairs of lines representing specs
             for (var i = 0; i < clearOutputLines.Length; i += 2)
             {
                 //(i): spec name, (i + 1): status
-                result.Add(new Tuple<string, string>(RemoveFirstSimbol(clearOutputLines[i]), clearOutputLines[i + 1]));
+                result.Add(new Tuple<string, string>(clearOutputLines[i], clearOutputLines[i + 1]));
             }
             return result;
         }
-
-        /// <summary>
-        /// Remove autogenerate by jasmine spec simbol
-        /// </summary>
-        /// <param name="specInputName">Spec name</param>
-        /// <returns>Spec name without first simbol</returns>
-        private static string RemoveFirstSimbol(string specInputName)
-            => specInputName.Remove(0, 1);
 
         /// <summary>
         /// Remove all jasmine debug info and split our output into separate lines
@@ -166,23 +157,15 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <returns>Separate lines of program operation without debug output</returns>
         private static IEnumerable<string> ClearAndSplitOutput(string output)
         {
-            const string startReporting = "Started\n";
-            const string endReporting = "\n\n";
+            const string startReporting = "Started\n\n";
+            const string endReporting = "\n\nEnded";
             var leftIndex = output.IndexOf(startReporting, StringComparison.Ordinal);
-            if (leftIndex == -1)
+            var rightIndex = output.LastIndexOf(endReporting, StringComparison.Ordinal);
+            if (leftIndex == -1 || rightIndex == -1)
             {
-                throw new FormatException("Invalid jasmine output format (Beginning Output)");
+                throw new FormatException("Invalid jasmine output format");
             }
-            var leftCut = output.Substring(leftIndex + startReporting.Length);
-            var rigthIndex = leftCut.IndexOf(endReporting, StringComparison.Ordinal);
-            if (rigthIndex == -1)
-            {
-                throw new FormatException("Invalid jasmine output format (Ending Output)");
-            }
-            var rightCut = leftCut.Substring(0, rigthIndex);
-            return rightCut.Split('\n');
-
-
+            return output.Substring(leftIndex + startReporting.Length, rightIndex - (leftIndex + startReporting.Length)).Split('\n');
         }
 
         /// <inheritdoc/>
