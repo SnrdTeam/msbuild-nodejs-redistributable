@@ -24,12 +24,6 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         public const string ExeExtension = ".exe";
 
         /// <summary>
-        /// Test file extensions 
-        /// </summary>
-        public const string JSTestExtension = ".test.js";
-        public const string TSTestExtension = ".test.ts";
-
-        /// <summary>
         /// Base uri used by test executor
         /// </summary>
         public const string ExecutorUri = "executor://JasmineTestExecutor/v1";
