@@ -20,13 +20,14 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <summary>
         /// Extensions that handles by TestAdapter
         /// </summary>
-        public const string DllExtension = ".dll";
-        public const string ExeExtension = ".exe";
+        private const string DllExtension = ".dll";
+
+        private const string ExeExtension = ".exe";
 
         /// <summary>
         /// Base uri used by test executor
         /// </summary>
-        public const string ExecutorUri = "executor://JasmineTestExecutor/v1";
+        private const string ExecutorUri = "executor://JasmineTestExecutor/v1";
 
         /// <summary>
         /// Default path to posix shell
@@ -65,101 +66,78 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private List<TestCase> DiscoverTests(string source)
         {
-            var completedTestCases = GetTestCasesFromSource(source).ToList();
+            var completedTestCases = GetTestCasesFromSource().ToList();
             return completedTestCases;
-        }
-
-        /// <summary>
-        /// Return completed test cases from source
-        /// </summary>
-        /// <param name="source">Output project directory</param>
-        /// <returns>List of test cases</returns>
-        private IEnumerable<TestCase> GetTestCasesFromSource(string source)
-        {
-            var jasmineResults = GetTestResultsFromJasmine(source);
-            var testCases = new List<TestCase>();
-            foreach (var jasmineResult in jasmineResults)
+            
+            IEnumerable<TestCase> GetTestCasesFromSource()
             {
-                var testCase = new TestCase(jasmineResult.Item1, new Uri(ExecutorUri), source);
-                testCase.SetPropertyValue(TestResultProperties.Outcome,
-                    jasmineResult.Item2 == "passed" ? TestOutcome.Passed : TestOutcome.Failed);
-                testCases.Add(testCase);
-            }
-
-            return testCases;
-        }
-
-        /// <summary>
-        /// Get path to jasmine executing script
-        /// </summary>
-        /// <param name="pathToBuildResult"></param>
-        /// <returns>Path to jasmine executing script</returns>
-        private static string GetPathToCmdJasmine(string pathToBuildResult)
-            => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? Path.Combine(pathToBuildResult, ShellFile)
-                : Path.Combine(pathToBuildResult, ShellFile);
-
-
-        /// <summary>
-        /// Function get exec file name and arguments for process
-        /// </summary>
-        /// <param name="shellFile">File contains shell script</param>
-        /// <returns>T1 - executing file, T2 - arguments for command line</returns>
-        private static Tuple<string, string> GetExecutingFileNameAndArguments(string shellFile)
-            => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? new Tuple<string, string>(shellFile, String.Empty)
-                : new Tuple<string, string>(DefaultPathToShell, shellFile);
-
-        /// <summary>
-        /// Get test result
-        /// </summary>
-        /// <param name="source">Output project directory</param>
-        /// <returns>Collection of unit test result. T1 is name of UnitTest, T2 is UnitTest's status</returns>
-        private IEnumerable<Tuple<string, string>> GetTestResultsFromJasmine(string source)
-        {
-            var shellFile = GetPathToCmdJasmine(Directory.GetParent(source).FullName);
-            var executeFileAndArgs = GetExecutingFileNameAndArguments(shellFile);
-            var jasmineUnitTesting = new Process
-            {
-                StartInfo = new ProcessStartInfo
+                var jasmineResults = GetTestResultsFromJasmine();
+                var testCases = new List<TestCase>();
+                foreach (var (name, status) in jasmineResults)
                 {
-                    FileName = executeFileAndArgs.Item1,
-                    Arguments = executeFileAndArgs.Item2,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
+                    var testCase = new TestCase(name, new Uri(ExecutorUri), source);
+                    testCase.SetPropertyValue(TestResultProperties.Outcome,
+                        status == "passed" ? TestOutcome.Passed : TestOutcome.Failed);
+                    testCases.Add(testCase);
                 }
-            };
-            jasmineUnitTesting.Start();
-            jasmineUnitTesting.WaitForExit();
-            var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
-            var clearOutputLines = ClearAndSplitOutput(rawResultFromJasmine).ToArray();
-            var result = new List<Tuple<string, string>>();
-            //The file format includes pairs of lines representing specs
-            for (var i = 0; i < clearOutputLines.Length; i += 2)
-            {
-                //(i): spec name, (i + 1): status
-                result.Add(new Tuple<string, string>(clearOutputLines[i], clearOutputLines[i + 1]));
-            }
-            return result;
-        }
 
-        /// <summary>
-        /// Remove all jasmine debug info and split our output into separate lines
-        /// </summary>
-        /// <param name="output">Program output</param>
-        /// <returns>Separate lines of program operation without debug output</returns>
-        private static IEnumerable<string> ClearAndSplitOutput(string output)
-        {
-            const string startReporting = "Started\n\n";
-            const string endReporting = "\n\nEnded";
-            var leftIndex = output.IndexOf(startReporting, StringComparison.Ordinal);
-            var rightIndex = output.LastIndexOf(endReporting, StringComparison.Ordinal);
-            if (leftIndex == -1 || rightIndex == -1)
-            {
-                throw new FormatException("Invalid jasmine output format");
+                return testCases;
+                
+                //Get test result
+                //Return collection of unit test result. T1 is name of UnitTest, T2 is UnitTest's status
+                IEnumerable<(string, string)> GetTestResultsFromJasmine()
+                {
+                    var shellFile = Path.Combine(Directory.GetParent(source).FullName, ShellFile);
+                    var (execFile, args) = GetExecutingFileNameAndArguments();
+                    var jasmineUnitTesting = new Process
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = execFile,
+                            Arguments = args,
+                            RedirectStandardOutput = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        }
+                    };
+                    jasmineUnitTesting.Start();
+                    jasmineUnitTesting.WaitForExit();
+                    var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
+                    var clearOutputLines = ClearAndSplitOutput().ToArray();
+                    var result = new List<(string, string)>();
+                    //The file format includes pairs of lines representing specs
+                    for (var i = 0; i < clearOutputLines.Length; i += 2)
+                    {
+                        //(i): spec name, (i + 1): status
+                        result.Add((clearOutputLines[i], clearOutputLines[i + 1]));
+                    }
+
+                    return result;
+
+                    (string, string) GetExecutingFileNameAndArguments()
+                        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                            ? (shellFile, String.Empty)
+                            : (DefaultPathToShell, shellFile);
+                    
+                    //Remove jasmine error output and split our output into separate lines
+                    IEnumerable<string> ClearAndSplitOutput()
+                    {
+                        const string startReporting = "Started\n\n";
+                        const string endReporting = "\n\nEnded";
+                        var leftIndex = rawResultFromJasmine.IndexOf(startReporting, StringComparison.Ordinal);
+                        var rightIndex = rawResultFromJasmine.LastIndexOf(endReporting, StringComparison.Ordinal);
+                        if (leftIndex == -1 || rightIndex == -1)
+                        {
+                            throw new FormatException("Invalid jasmine output format");
+                        }
+
+                        var clearOutput = rawResultFromJasmine
+                            .Substring(leftIndex + startReporting.Length, rightIndex - (leftIndex + startReporting.Length))
+                            .Split('\n');
+                        return clearOutput;
+                    }
+                }
             }
-            return output.Substring(leftIndex + startReporting.Length, rightIndex - (leftIndex + startReporting.Length)).Split('\n');
         }
 
         /// <inheritdoc/>
@@ -182,13 +160,14 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         {
             var log = new LoggerHelper(frameworkHandle, Stopwatch.StartNew());
             log.Log("Start test run for tests...");
-            var uniqueSources = tests.Select(test => test.Source).Distinct();
+            var testMaterializeArray = tests.ToArray();
+            var uniqueSources = testMaterializeArray.Select(test => test.Source).Distinct();
             List<TestCase> updatedTestCases = new List<TestCase>();
             foreach (var source in uniqueSources)
             {
                 updatedTestCases.AddRange(DiscoverTests(source));
             }
-            RunTestsWithJasmine(updatedTestCases.Where(test => tests.Select(oldTest => oldTest.FullyQualifiedName).Contains(test.FullyQualifiedName)), runContext, frameworkHandle, log);
+            RunTestsWithJasmine(updatedTestCases.Where(test => testMaterializeArray.Select(oldTest => oldTest.FullyQualifiedName).Contains(test.FullyQualifiedName)), runContext, frameworkHandle, log);
             log.Log("Test run complete.");
         }
 
