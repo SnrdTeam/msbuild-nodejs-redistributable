@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Adeptik.NodeJs.Redistributable
 {
@@ -32,14 +33,15 @@ namespace Adeptik.NodeJs.Redistributable
             if (string.IsNullOrEmpty(BuildPath) || !Directory.Exists(BuildPath))
                 return false;
 
-            var testFiles = FindTestFilesInBuildFolder();
+            var testFiles = FindTestFilesInBuildFolder().ToArray();
 
             var jsonStringBuilder = new StringBuilder();
             jsonStringBuilder.AppendLine("{");
-            jsonStringBuilder.AppendLine("\t\"spec_dir\": \".\"");
+            jsonStringBuilder.AppendLine("\t\"spec_dir\": \".\",");
             jsonStringBuilder.AppendLine("\t\"spec_files\": [");
-            foreach (var testFile in testFiles)
-                jsonStringBuilder.AppendLine($"\t\t\t\"{testFile.Replace('\\','/')}\",");
+            for (int testFileIndex = 0; testFileIndex < testFiles.Length; testFileIndex++)
+                jsonStringBuilder.AppendLine($"\t\t\t\"{testFiles[testFileIndex].Replace('\\', '/')}\"" +
+                                             $"{(testFileIndex != testFiles.Length - 1 ? "," : String.Empty)}");
             jsonStringBuilder.AppendLine("\t\t],");
             jsonStringBuilder.AppendLine("\t\"stopSpecOnExpectationFailure\": \"false\",");
             jsonStringBuilder.AppendLine("\t\"random\": \"false\"");
@@ -51,7 +53,8 @@ namespace Adeptik.NodeJs.Redistributable
 
             IEnumerable<string> FindTestFilesInBuildFolder()
             {
-                return Directory.GetFiles(BuildPath, $"*{JSTestExtension}", SearchOption.AllDirectories);
+                return Directory.EnumerateFiles(BuildPath, $"*{JSTestExtension}", SearchOption.AllDirectories)
+                    .Select(Path.GetFullPath);
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+﻿using Adeptik.NodeJs.UnitTesting.TestAdapter.Utils;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using System;
@@ -6,7 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Adeptik.NodeJs.UnitTesting.TestAdapter.Utils;
+using System.Runtime.InteropServices;
 
 namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 {
@@ -19,25 +20,29 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <summary>
         /// Extensions that handles by TestAdapter
         /// </summary>
-        public const string DllExtension = ".dll";
-        public const string ExeExtension = ".exe";
+        private const string DllExtension = ".dll";
 
-        /// <summary>
-        /// Test file extensions 
-        /// </summary>
-        public const string JSTestExtension = ".test.js";
-        public const string TSTestExtension = ".test.ts";
+        private const string ExeExtension = ".exe";
 
         /// <summary>
         /// Base uri used by test executor
         /// </summary>
-        public const string ExecutorUri = "executor://JasmineTestExecutor/v1";
+        private const string ExecutorUri = "executor://JasmineTestExecutor/v1";
 
-        private IEnumerable<string> FindTestFilesInProject(string projectDir)
-        {
-            return Directory.GetFiles(projectDir, $"*{JSTestExtension}").Union(
-                Directory.GetFiles(projectDir, $"*{TSTestExtension}"));
-        }
+        /// <summary>
+        /// Default path to posix shell
+        /// </summary>
+        private const string DefaultPathToShell = "/bin/sh";
+
+        /// <summary>
+        /// File containing commands for the operating system shell
+        /// </summary>
+        private const string ShellFile = "jasmine.cmd";
+
+        /// <summary>
+        /// Test run is canceled?
+        /// </summary>
+        private bool _canceled;
 
         /// <inheritdoc/>
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
@@ -61,16 +66,78 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private List<TestCase> DiscoverTests(string source)
         {
-            var projectPath = Path.GetDirectoryName(source);
+            var completedTestCases = GetTestCasesFromSource().ToList();
+            return completedTestCases;
+            
+            IEnumerable<TestCase> GetTestCasesFromSource()
+            {
+                var jasmineResults = GetTestResultsFromJasmine();
+                var testCases = new List<TestCase>();
+                foreach (var (name, status) in jasmineResults)
+                {
+                    var testCase = new TestCase(name, new Uri(ExecutorUri), source);
+                    testCase.SetPropertyValue(TestResultProperties.Outcome,
+                        status == "passed" ? TestOutcome.Passed : TestOutcome.Failed);
+                    testCases.Add(testCase);
+                }
 
-            return FindTestFilesInProject(projectPath)
-                .Select(testFile =>
-                    new TestCase(GetTestName(testFile), new Uri(ExecutorUri), source)
+                return testCases;
+                
+                //Get test result
+                //Return collection of unit test result. T1 is name of UnitTest, T2 is UnitTest's status
+                IEnumerable<(string, string)> GetTestResultsFromJasmine()
+                {
+                    var shellFile = Path.Combine(Directory.GetParent(source).FullName, ShellFile);
+                    var (execFile, args) = GetExecutingFileNameAndArguments();
+                    var jasmineUnitTesting = new Process
                     {
-                        CodeFilePath = Path.Combine(projectPath, testFile)
-                    }).ToList();
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = execFile,
+                            Arguments = args,
+                            RedirectStandardOutput = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        }
+                    };
+                    jasmineUnitTesting.Start();
+                    jasmineUnitTesting.WaitForExit();
+                    var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
+                    var clearOutputLines = ClearAndSplitOutput().ToArray();
+                    var result = new List<(string, string)>();
+                    //The file format includes pairs of lines representing specs
+                    for (var i = 0; i < clearOutputLines.Length; i += 2)
+                    {
+                        //(i): spec name, (i + 1): status
+                        result.Add((clearOutputLines[i], clearOutputLines[i + 1]));
+                    }
 
-            static string GetTestName(string file) => Path.GetFileNameWithoutExtension(file);
+                    return result;
+
+                    (string, string) GetExecutingFileNameAndArguments()
+                        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                            ? (shellFile, String.Empty)
+                            : (DefaultPathToShell, shellFile);
+                    
+                    //Remove jasmine error output and split our output into separate lines
+                    IEnumerable<string> ClearAndSplitOutput()
+                    {
+                        const string startReporting = "Started\n\n";
+                        const string endReporting = "\n\nEnded";
+                        var leftIndex = rawResultFromJasmine.IndexOf(startReporting, StringComparison.Ordinal);
+                        var rightIndex = rawResultFromJasmine.LastIndexOf(endReporting, StringComparison.Ordinal);
+                        if (leftIndex == -1 || rightIndex == -1)
+                        {
+                            throw new FormatException("Invalid jasmine output format");
+                        }
+
+                        var clearOutput = rawResultFromJasmine
+                            .Substring(leftIndex + startReporting.Length, rightIndex - (leftIndex + startReporting.Length))
+                            .Split('\n');
+                        return clearOutput;
+                    }
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -93,26 +160,39 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         {
             var log = new LoggerHelper(frameworkHandle, Stopwatch.StartNew());
             log.Log("Start test run for tests...");
-            RunTestsWithJasmine(tests, runContext, frameworkHandle, log);
-
+            var testMaterializeArray = tests.ToArray();
+            var uniqueSources = testMaterializeArray.Select(test => test.Source).Distinct();
+            List<TestCase> updatedTestCases = new List<TestCase>();
+            foreach (var source in uniqueSources)
+            {
+                updatedTestCases.AddRange(DiscoverTests(source));
+            }
+            RunTestsWithJasmine(updatedTestCases.Where(test => testMaterializeArray.Select(oldTest => oldTest.FullyQualifiedName).Contains(test.FullyQualifiedName)), runContext, frameworkHandle, log);
             log.Log("Test run complete.");
         }
 
         private void RunTestsWithJasmine(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, LoggerHelper log)
         {
-            var jasmineConfig = new
+            _canceled = false;
+            foreach (var test in tests)
             {
-                spec_files = tests.Select(x => x.CodeFilePath).ToArray(),
-                stopSpecOnExpectationFailure = false,
-                random = false
-            };
+                if (_canceled)
+                {
+                    break;
+                }
 
-            //File.WriteAllText ($"{runContext.TestRunDirectory}/jasmine.json", JsonSerializer.Serialize(jasmineConfig));
+                var testResult = new TestResult(test)
+                {
+                    Outcome = (TestOutcome)test.GetPropertyValue(TestResultProperties.Outcome)
+                };
+                frameworkHandle.RecordResult(testResult);
+            }
         }
 
         /// <inheritdoc/>
         public void Cancel()
         {
+            _canceled = true;
         }
     }
 }

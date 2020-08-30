@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using System.Diagnostics;
 
 namespace Adeptik.NodeJs.UnitTesting.TestAdapter.Utils
 {
@@ -14,7 +14,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter.Utils
             InnerLogger = logger;
             Stopwatch = stopwatch;
         }
-    
+
         private void SendMessage(TestMessageLevel level, string? filename, string message)
         {
             var fileNameText = string.IsNullOrEmpty(filename) ? string.Empty : $"{filename} ";

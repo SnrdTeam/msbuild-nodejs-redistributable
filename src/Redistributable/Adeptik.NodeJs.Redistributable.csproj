@@ -8,14 +8,15 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VersionPrefix>2.1.0</VersionPrefix>
+    <VersionPrefix>2.2.0</VersionPrefix>
     <VersionSuffix>jasminetest</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Adeptik.SemanticVersion" Version="1.0.0" />
     <PackageReference Include="Microsoft.Build.Framework" Version="15.1.1012" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012" PrivateAssets="All" />    
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012" PrivateAssets="All" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />    
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +29,7 @@
     <None Include="targets\build\Adeptik.NodeJs.Redistributable.targets" Pack="True" PackagePath="build/" />
     <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.props" Pack="True" PackagePath="buildMultiTargeting/" />
     <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.targets" Pack="True" PackagePath="buildMultiTargeting/" />
+	<None Include="reporters\SimpleReporter.js" Pack="True" PackagePath="reporters/" />
   </ItemGroup>
 
   <PropertyGroup>

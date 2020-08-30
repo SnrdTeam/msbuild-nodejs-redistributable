@@ -20,7 +20,6 @@ namespace Adeptik.NodeJs.Redistributable
     public class InstallNodeJs : Task
     {
         private static readonly Regex VersionRegex = new Regex(@"^\d+\.\d+\.\d+$", RegexOptions.Compiled);
-        private static readonly Mutex NodeInstallMutex = new Mutex(false, "NodeMtx");
         private static readonly string OSVersion;
 
         private static readonly string OSArchitecture;
@@ -89,9 +88,9 @@ namespace Adeptik.NodeJs.Redistributable
         /// Returns commandline to run npm
         /// </summary>
         [Output]
-        public string? NPMExecutable { get; private set; }        
+        public string? NPMExecutable { get; private set; }
 
-        private const string NodeUrl = "https://nodejs.org/download/release";           
+        private const string NodeUrl = "https://nodejs.org/download/release";
 
         /// <summary>
         /// Ensure that NodeJS downloaded & install yarn
@@ -111,11 +110,11 @@ namespace Adeptik.NodeJs.Redistributable
             string lockfileFilePath;
             Uri distribHashSumUrl;
             Uri distribUrl;
-
+            using var nodeInstallMutex = new Mutex(false, $@"Global\{NodeJsVersion}");
             try
             {
                 InitPathInfo();
-                NodeInstallMutex.WaitOne();
+                nodeInstallMutex.WaitOne();
                 if (!NodeJSExist())
                 {
                     if (!NodeJSDownloaded())
@@ -134,7 +133,7 @@ namespace Adeptik.NodeJs.Redistributable
             }
             finally
             {
-                NodeInstallMutex.ReleaseMutex();
+                nodeInstallMutex.ReleaseMutex();
             }
 
             return !Log.HasLoggedErrors;
@@ -177,7 +176,7 @@ namespace Adeptik.NodeJs.Redistributable
                     return File.ReadAllText(lockfileFilePath) == NodeJsVersion;
 
                 return false;
-            }            
+            }
 
             bool NodeJSDownloaded()
             {
