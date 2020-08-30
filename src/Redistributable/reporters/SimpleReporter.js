@@ -1,13 +1,4 @@
 const SimpleReporter = {
-    //Empty
-    suiteStarted: function (result) { },
-
-    //Empty
-    specStarted: function (result) { },
-
-    //Empty
-    suiteDone: function (result) { },
-
     jasmineStarted: function (suiteInfo) {
         console.log("Started\n");
     },
