@@ -21,9 +21,10 @@
     </PackageReference>
   </ItemGroup>
 
-  <PropertyGroup>
-    <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
-    <YarnBuildCommand>build</YarnBuildCommand>
-  </PropertyGroup>
+	<PropertyGroup>
+		<NodeJsDistVersion>12.15.0</NodeJsDistVersion>
+		<YarnBuildCommand>build</YarnBuildCommand>
+    <JasmineVersion>latest</JasmineVersion>
+	</PropertyGroup>
 
 </Project>

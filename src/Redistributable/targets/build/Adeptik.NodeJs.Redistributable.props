@@ -7,7 +7,7 @@
     <NodeJsDistVersion Condition="'$(NodeJsDistVersion)' == ''"></NodeJsDistVersion>
     <YarnVersion Condition="'$(YarnVersion)' == ''">latest</YarnVersion>    
     <YarnBuildCommand Condition="'$(YarnBuildCommand)' == ''"></YarnBuildCommand>
-    <JasmineVersion Condition="'$(JasmineVersion)' == ''">latest</JasmineVersion>
+    <JasmineVersion Condition="'$(JasmineVersion)' == ''"></JasmineVersion>
   </PropertyGroup>
 
   <!-- Register Task -->
