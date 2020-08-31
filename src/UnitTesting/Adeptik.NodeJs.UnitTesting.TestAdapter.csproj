@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <VersionPrefix>1.1.0</VersionPrefix>
-    <VersionSuffix>init</VersionSuffix>
+    <VersionSuffix>testadapter_v2</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>

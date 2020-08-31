@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <VersionPrefix>2.2.0</VersionPrefix>
-    <VersionSuffix>jasminetest</VersionSuffix>
+    <VersionSuffix>jasminetest_v2</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
