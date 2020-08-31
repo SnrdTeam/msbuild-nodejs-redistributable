@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Adeptik.NodeJs.Redistributable" Version="2.2.0-jasminetest" />
-    <PackageReference Include="Adeptik.NodeJs.UnitTesting.TestAdapter" Version="1.1.0-init" />
+    <PackageReference Include="Adeptik.NodeJs.Redistributable" Version="2.2.0-jasminetestV2" />
+    <PackageReference Include="Adeptik.NodeJs.UnitTesting.TestAdapter" Version="1.1.0-testadapterV2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.6.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
