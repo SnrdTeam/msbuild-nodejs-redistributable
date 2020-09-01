@@ -14,10 +14,10 @@ MSBuild targets for:
 * Jasmine installation
 * Generate jasmine configuration and executable shell file
 
-Some targets use this MSBuild tasks:
-* NodeJS installation task
-* Installation npm modules
-* Generate jasmine configuration
+MSBuild tasks:
+* NodeJS installation task (`InstallNodeJs`)
+* Installation npm modules (`NPMInstallGlobal`)
+* Generate jasmine configuration (`GenerateJasmineConfig`)
 
 Supports Windows, Linux & MacOS.
 
@@ -117,10 +117,10 @@ Example of jasmine.json configuration:
 }
 ```
 File contains 4 parameters:
-* `spec_dir` - indicate jasmine where contains specs
-* `spec_files` - specify absolute/relative path to spec files
-* `stopSpecOnExpectationFailure` - whether to stop when an error occurs?
-* `random` - display in random order?
+* `spec_dir` - output directory with assembly
+* `spec_files` - files with the extension .test.js located in the same directory with the assembly
+* `stopSpecOnExpectationFailure` - always false
+* `random` - always false
 
 For more detail information about configuration file [click this](https://jasmine.github.io/pages/docs_home.html).
 
@@ -153,12 +153,9 @@ or add in your .csproj:
 
 This package implements a standard mechanism for finding and executing test cases by creating test adapter for Jasmine testing.
 
-### Require
+### Notes
 
 * At build time, all jasmine test cases should be in the assembly output directory
 * All test case output files must adhere to the following name format `nameOfYourTestFile.test.js`
-
-### Note
-
 * All jasmine tests runs for test discovering
 * All jasmine tests runs when you try run exactly specified tests in test explorer
