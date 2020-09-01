@@ -1,3 +1,5 @@
+
+---
 # Adeptik NodeJs Redistributable
 
 ## About package
@@ -11,6 +13,11 @@ MSBuild targets for:
 * Run node scripts from package.json via yarn
 * Jasmine installation
 * Generate jasmine configuration and executable shell file
+
+Some targets use this MSBuild tasks:
+* NodeJS installation task
+* Installation npm modules
+* Generate jasmine configuration
 
 Supports Windows, Linux & MacOS.
 
@@ -90,7 +97,7 @@ If you want to use a jasmine testing framework, you may specify jasmine version 
 </PropertyGroup>
 ```
 
-Jasmine command stored to `$(JasmineExecutable)` property. This target (`InstallJasmine`) depends on `InstallNodeJs`.
+Jasmine run command stored to file named with `$(JasmineExecutable)` property. This target (`InstallJasmine`) depends on `InstallNodeJs`.
 
 ### Generate jasmine configuration and executable shell file
 
@@ -109,8 +116,15 @@ Example of jasmine.json configuration:
 	"random": "false"
 }
 ```
+File contains 4 parameters:
+* `spec_dir` - indicate jasmine where contains specs
+* `spec_files` - specify absolute/relative path to spec files
+* `stopSpecOnExpectationFailure` - whether to stop when an error occurs?
+* `random` - display in random order?
 
 For more detail information about configuration file [click this](https://jasmine.github.io/pages/docs_home.html).
+
+---
 
 # Adeptik NodeJs UnitTesting TestAdapter 
 
@@ -135,11 +149,16 @@ or add in your .csproj:
 
     <PackageReference Include="Adeptik.NodeJs.UnitTesting.TestAdapter" Version="1.1.0" />
 
-### How it's work?
+### How it works?
 
-This package implements a standard mechanism for finding and executing test cases by creating your own test adapter for Jasmine testing.
+This package implements a standard mechanism for finding and executing test cases by creating test adapter for Jasmine testing.
 
-### Require:
+### Require
 
 * At build time, all jasmine test cases should be in the assembly output directory
 * All test case output files must adhere to the following name format `nameOfYourTestFile.test.js`
+
+### Note
+
+* All jasmine tests runs for test discovering
+* All jasmine tests runs when you try run exactly specified tests in test explorer
