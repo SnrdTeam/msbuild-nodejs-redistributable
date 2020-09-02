@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <VersionPrefix>1.1.0</VersionPrefix>
-    <VersionSuffix>testadapterV2</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
