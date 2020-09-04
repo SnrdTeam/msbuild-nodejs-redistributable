@@ -3,9 +3,8 @@
   "name": "asp.net",
   "private": true,
   "scripts": {
-    "build": "webpack"
+    "test": "echo 'Example Run Script Via YarnBuildCommand'"
   },
   "devDependencies": {
-    "webpack": "4.41.6"
   }
 }

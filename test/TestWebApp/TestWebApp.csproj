@@ -5,7 +5,7 @@
     <UserSecretsId>420e1ede-4cb5-4431-8c94-cf2897e1f317</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <NodeJsDistVersion>12.15.0</NodeJsDistVersion>
-    <YarnBuildCommand>build</YarnBuildCommand>
+    <YarnBuildCommand>test</YarnBuildCommand>
     <DockerfileContext>..\..</DockerfileContext>
   </PropertyGroup>
 
