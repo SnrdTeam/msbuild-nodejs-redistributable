@@ -52,18 +52,10 @@
     <CoreCompileDependsOn>$(CoreCompileDependsOn);YarnRun</CoreCompileDependsOn>
   </PropertyGroup>
 
-  <!-- Install Jasmine globally -->
-  <Target Name="InstallJasmine" DependsOnTargets="InstallNodeJs">
-    <NPMInstallGlobal NPMExecutable="$(NPMExecutable)" PackageName="jasmine" PackageVersion="$(JasmineVersion)" />
-    <PropertyGroup>
-      <JasmineExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)/jasmine/bin/jasmine.js</JasmineExecutable>
-    </PropertyGroup>
-  </Target>
-
   <!-- Generate Jasmine test run config for shell -->
-  <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallJasmine" BeforeTargets="Build" Condition="'$(JasmineVersion)' != ''">
+  <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallNodeJs" BeforeTargets="Build">
     <GenerateJasmineConfig BuildPath="$(OutDir)"/>
     <WriteLinesToFile File="$(OutDir)jasmine.cmd" Overwrite="true"
-      Lines="$(JasmineExecutable) --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\reporters\SimpleReporter.js" />
+      Lines="$(NodeExecutable) $(ProjectPath)/../node_modules/jasmine/bin/jasmine.js --config=jasmine.json --reporter=$(MSBuildThisFileDirectory)..\reporters\MachineReadablePipeReporter.js" />
   </Target>
 </Project>

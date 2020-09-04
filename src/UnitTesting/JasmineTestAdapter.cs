@@ -6,8 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 {
@@ -25,6 +28,16 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         private const string ExeExtension = ".exe";
 
         /// <summary>
+        /// Pipe for IPC communication with jasmine process
+        /// </summary>
+        private const string JasminePipeName = "ReporterJasminePipe";
+
+        /// <summary>
+        /// Path to locall install jasmine framework from source
+        /// </summary>
+        private const string DefaultPathToJasmine = "/../../../../node_modules/jasmine/bin/jasmine.js ";
+
+        /// <summary>
         /// Base uri used by test executor
         /// </summary>
         private const string ExecutorUri = "executor://JasmineTestExecutor/v1";
@@ -38,6 +51,11 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// File containing commands for the operating system shell
         /// </summary>
         private const string ShellFile = "jasmine.cmd";
+        
+        /// <summary>
+        /// Global identificator for reporter mutex
+        /// </summary>
+        private const string mutexReporterIdentificatior = @"Global\ReporterMtx";
 
         /// <summary>
         /// Test run is canceled?
@@ -66,6 +84,10 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private List<TestCase> DiscoverTests(string source)
         {
+            if (!File.Exists($"{source}{DefaultPathToJasmine}"))
+            {
+                throw new Exception("Jasmine executable not found");
+            }
             var completedTestCases = GetTestCasesFromSource().ToList();
             return completedTestCases;
             
@@ -100,16 +122,34 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                             CreateNoWindow = true
                         }
                     };
+                    using var reporterMutex = new Mutex(false, mutexReporterIdentificatior);
+                    reporterMutex.WaitOne();
+                    using var readerPipe = new NamedPipeServerStream(JasminePipeName);
+                    var pipeTask = Task.Run(() => {
+                        var jasmineOutput = new List<string>();
+                        var streamReader = new StreamReader(readerPipe);
+                        readerPipe.WaitForConnection();
+                        while (readerPipe.IsConnected)
+                        {
+                            var lineFromPipe = streamReader.ReadLine();
+                            if (!String.IsNullOrWhiteSpace(lineFromPipe))
+                            {
+                                jasmineOutput.Add(lineFromPipe);
+                            }
+                        }
+                        return jasmineOutput;
+                    });
+
                     jasmineUnitTesting.Start();
+                    var jasmineOutput = pipeTask.Result;
                     jasmineUnitTesting.WaitForExit();
-                    var rawResultFromJasmine = jasmineUnitTesting.StandardOutput.ReadToEnd();
-                    var clearOutputLines = ClearAndSplitOutput().ToArray();
+                    reporterMutex.ReleaseMutex();
                     var result = new List<(string, string)>();
-                    //The file format includes pairs of lines representing specs
-                    for (var i = 0; i < clearOutputLines.Length; i += 2)
+                    for (int i = 0; i < jasmineOutput.Count; i+=2)
                     {
+                        //The file format includes pairs of lines representing specs
                         //(i): spec name, (i + 1): status
-                        result.Add((clearOutputLines[i], clearOutputLines[i + 1]));
+                        result.Add((jasmineOutput[i], jasmineOutput[i + 1]));
                     }
 
                     return result;
@@ -118,24 +158,6 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                             ? (shellFile, String.Empty)
                             : (DefaultPathToShell, shellFile);
-                    
-                    //Remove jasmine error output and split our output into separate lines
-                    IEnumerable<string> ClearAndSplitOutput()
-                    {
-                        const string startReporting = "Started\n\n";
-                        const string endReporting = "\n\nEnded";
-                        var leftIndex = rawResultFromJasmine.IndexOf(startReporting, StringComparison.Ordinal);
-                        var rightIndex = rawResultFromJasmine.LastIndexOf(endReporting, StringComparison.Ordinal);
-                        if (leftIndex == -1 || rightIndex == -1)
-                        {
-                            throw new FormatException("Invalid jasmine output format");
-                        }
-
-                        var clearOutput = rawResultFromJasmine
-                            .Substring(leftIndex + startReporting.Length, rightIndex - (leftIndex + startReporting.Length))
-                            .Split('\n');
-                        return clearOutput;
-                    }
                 }
             }
         }

@@ -1,10 +1,13 @@
-const SimpleReporter = {
-    jasmineStarted: function (suiteInfo) {
-        console.log("Started\n");
-    },
+const net = require('net');
 
+const PIPE_NAME = 'ReporterJasminePipe';
+const PIPE_PATH = '\\\\.\\pipe\\' + PIPE_NAME;
+let stream = net.connect(PIPE_PATH);
+
+
+const MachineReadableSimpleReporter = {
     jasmineDone: function (result) {
-        console.log("\nEnded");
+        stream.end();
     },
 
     specDone: function (result) {
@@ -12,10 +15,10 @@ const SimpleReporter = {
         //Delete trailing spaces and replace remain spaces with underscores
         let suits = result.fullName.replace(result.description, ' ').trim().replace(/ /g, '_');
         let spec = result.description.trim().replace(/ /g, '_');
-        console.log(suits + '.' + spec);
-        console.log(result.status);
+        stream.write(suits + '.' + spec + "\r\n");
+        stream.write(result.status + "\r\n");
     }
 
 };
 jasmine.getEnv().clearReporters();
-jasmine.getEnv().addReporter(SimpleReporter);
+jasmine.getEnv().addReporter(MachineReadableSimpleReporter);

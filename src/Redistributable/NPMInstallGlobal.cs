@@ -2,12 +2,14 @@
 using Microsoft.Build.Utilities;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Adeptik.NodeJs.Redistributable
 {
+
     public class NPMInstallGlobal : Task
     {
         /// <summary>
@@ -73,7 +75,7 @@ namespace Adeptik.NodeJs.Redistributable
                     }
                 };
                 NPMProcess.Start();
-                
+
                 if (!NPMProcess.WaitForExit(WaitingTime))
                 {
                     Log.LogError("Installation timeout. Terminating...");
