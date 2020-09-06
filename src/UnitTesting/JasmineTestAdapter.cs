@@ -35,13 +35,18 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <summary>
         /// Path to locall install jasmine framework from source
         /// </summary>
-        private const string DefaultPathToJasmine = "/../../../../node_modules/jasmine/bin/jasmine.js ";
+        private const string DefaultPathToJasmine = "/../../../node_modules/jasmine/bin/jasmine.js ";
 
         /// <summary>
         /// Base uri used by test executor
         /// </summary>
         private const string ExecutorUri = "executor://JasmineTestExecutor/v1";
-
+        
+        /// <summary>
+        /// Output status message when spec is passed
+        /// </summary>
+        private const string TestCompleteMessage = "passed";
+        
         /// <summary>
         /// Default path to posix shell
         /// </summary>
@@ -55,7 +60,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <summary>
         /// Global identificator for reporter mutex
         /// </summary>
-        private const string mutexReporterIdentificatior = @"Global\ReporterMtx";
+        private const string MutexReporterIdentificatior = @"Global\ReporterMtx";
 
         /// <summary>
         /// Test run is canceled?
@@ -84,9 +89,10 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private List<TestCase> DiscoverTests(string source)
         {
-            if (!File.Exists($"{source}{DefaultPathToJasmine}"))
+            var jasmineExecutePath = $"{Path.GetDirectoryName(source)}{DefaultPathToJasmine}";
+            if (!File.Exists(jasmineExecutePath))
             {
-                throw new Exception("Jasmine executable not found");
+                throw new Exception($"Jasmine executable not found [{jasmineExecutePath}]");
             }
             var completedTestCases = GetTestCasesFromSource().ToList();
             return completedTestCases;
@@ -99,7 +105,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                 {
                     var testCase = new TestCase(name, new Uri(ExecutorUri), source);
                     testCase.SetPropertyValue(TestResultProperties.Outcome,
-                        status == "passed" ? TestOutcome.Passed : TestOutcome.Failed);
+                        status == TestCompleteMessage ? TestOutcome.Passed : TestOutcome.Failed);
                     testCases.Add(testCase);
                 }
 
@@ -122,7 +128,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                             CreateNoWindow = true
                         }
                     };
-                    using var reporterMutex = new Mutex(false, mutexReporterIdentificatior);
+                    using var reporterMutex = new Mutex(false, MutexReporterIdentificatior);
                     reporterMutex.WaitOne();
                     using var readerPipe = new NamedPipeServerStream(JasminePipeName);
                     var pipeTask = Task.Run(() => {
@@ -141,15 +147,15 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                     });
 
                     jasmineUnitTesting.Start();
-                    var jasmineOutput = pipeTask.Result;
+                    var jasmineOutputFromPipe = pipeTask.Result;
                     jasmineUnitTesting.WaitForExit();
                     reporterMutex.ReleaseMutex();
                     var result = new List<(string, string)>();
-                    for (int i = 0; i < jasmineOutput.Count; i+=2)
+                    for (int i = 0; i < jasmineOutputFromPipe.Count; i+=2)
                     {
                         //The file format includes pairs of lines representing specs
                         //(i): spec name, (i + 1): status
-                        result.Add((jasmineOutput[i], jasmineOutput[i + 1]));
+                        result.Add((jasmineOutputFromPipe[i], jasmineOutputFromPipe[i + 1]));
                     }
 
                     return result;
