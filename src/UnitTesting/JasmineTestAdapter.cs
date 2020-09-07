@@ -56,11 +56,6 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// File containing commands for the operating system shell
         /// </summary>
         private const string ShellFile = "jasmine.cmd";
-        
-        /// <summary>
-        /// Global identificator for reporter mutex
-        /// </summary>
-        private const string MutexReporterIdentificatior = @"Global\ReporterMtx";
 
         /// <summary>
         /// Test run is canceled?
@@ -128,10 +123,10 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                             CreateNoWindow = true
                         }
                     };
-                    using var reporterMutex = new Mutex(false, MutexReporterIdentificatior);
-                    reporterMutex.WaitOne();
-                    using var readerPipe = new NamedPipeServerStream(JasminePipeName);
+                    
+                    jasmineUnitTesting.Start();
                     var pipeTask = Task.Run(() => {
+                        using var readerPipe = new NamedPipeServerStream($"{JasminePipeName}{jasmineUnitTesting.Id}");
                         var jasmineOutput = new List<string>();
                         var streamReader = new StreamReader(readerPipe);
                         readerPipe.WaitForConnection();
@@ -145,11 +140,8 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                         }
                         return jasmineOutput;
                     });
-
-                    jasmineUnitTesting.Start();
                     var jasmineOutputFromPipe = pipeTask.Result;
                     jasmineUnitTesting.WaitForExit();
-                    reporterMutex.ReleaseMutex();
                     var result = new List<(string, string)>();
                     for (int i = 0; i < jasmineOutputFromPipe.Count; i+=2)
                     {

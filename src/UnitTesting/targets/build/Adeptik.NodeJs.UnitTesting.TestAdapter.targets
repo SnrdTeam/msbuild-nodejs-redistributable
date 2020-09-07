@@ -1,3 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	
+	<Target Name="CopyReporter" BeforeTargets="Build">
+		<ItemGroup>
+			<PathToReporters Include="$(MSBuildThisFileDirectory)/../reporters/**\*.*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(PathToReporters)" DestinationFolder="$(TargetDir)\%(RecursiveDir)" SkipUnchangedFiles="true" />
+	</Target>
+	
 </Project>
