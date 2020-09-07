@@ -1,11 +1,11 @@
 const net = require('net');
+const os = require('os');
+const PIPE_NAME = 'ReporterJasminePipe'
+const PIPE_PATH = (os.platform == 'win32' ? '\\\\.\\pipe\\' : '/var/pipes/') + PIPE_NAME;
 
-const PIPE_NAME = 'ReporterJasminePipe';
-const PIPE_PATH = '\\\\.\\pipe\\' + PIPE_NAME;
 let stream = net.connect(PIPE_PATH);
 
-
-const MachineReadableSimpleReporter = {
+const MachineReadablePipeReporter = {
     jasmineDone: function (result) {
         stream.end();
     },
@@ -21,4 +21,4 @@ const MachineReadableSimpleReporter = {
 
 };
 jasmine.getEnv().clearReporters();
-jasmine.getEnv().addReporter(MachineReadableSimpleReporter);
+jasmine.getEnv().addReporter(MachineReadablePipeReporter);
