@@ -11,7 +11,6 @@ MSBuild targets for:
 * Yarn installation
 * Node modules installation via yarn
 * Run node scripts from package.json via yarn
-* Jasmine installation
 * Generate jasmine configuration and executable shell file
 
 MSBuild tasks:
@@ -87,21 +86,9 @@ You can run node scripts described in package.json using Yarn by setting `$(Yarn
 </PropertyGroup>
 ```
 
-### Jasmine installation
-
-If you want to use a jasmine testing framework, you may specify jasmine version by setting `$(JasmineVersion)`, otherwise jasmine will not be installed.
-
-```xml
-<PropertyGroup>
-    <JasmineVersion>latest</JasmineVersion>
-</PropertyGroup>
-```
-
-Jasmine run command stored to file named with `$(JasmineExecutable)` property. This target (`InstallJasmine`) depends on `InstallNodeJs`.
-
 ### Generate jasmine configuration and executable shell file
 
-If you installed jasmine, in the output directory of your project will be generate configuration file (`jasmine.json`) and shell file which execute jasmine with custom reporter([`SimpleReporter.js`](./src/Redistributable/reporters/SimpleReporter.js)) and configuration file. This target (`GenerateJasmineConfigAndStartup`) depends on `InstallJasmine`.
+In the output directory of your project will be generate configuration file (`jasmine.json`) and shell file which execute jasmine with custom reporter([`SimpleReporter.js`](./src/Redistributable/reporters/SimpleReporter.js)) and configuration file. This target (`GenerateJasmineConfigAndStartup`) depends on `InstallJasmine`.
 
 Example of jasmine.json configuration:
 
@@ -159,3 +146,4 @@ This package implements a standard mechanism for finding and executing test case
 * All test case output files must adhere to the following name format `nameOfYourTestFile.test.js`
 * All jasmine tests runs for test discovering
 * All jasmine tests runs when you try run exactly specified tests in test explorer
+* **Require**: Jasmine should be located in the node_modules folder at the root of your project before you run test
