@@ -3,7 +3,7 @@ const net = require('net');
 const process = require("process");
 const os = require('os');
 const PIPE_NAME = 'ReporterJasminePipe' + process.ppid;
-const PIPE_PATH = (os.platform == 'win32' ? '\\\\.\\pipe\\' : '/var/pipes/') + PIPE_NAME;
+const PIPE_PATH = (os.platform == 'win32' ? '\\\\.\\pipe\\' : '/tmp/CoreFxPipe_') + PIPE_NAME;
 
 let stream = net.connect(PIPE_PATH).addListener("close", () => process.exit(1));
 let config = process.argv[2];
