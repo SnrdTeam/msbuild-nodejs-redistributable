@@ -9,7 +9,6 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Adeptik.NodeJs.UnitTesting.TestAdapter
@@ -33,20 +32,25 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         private const string JasminePipeName = "ReporterJasminePipe";
 
         /// <summary>
+        /// Path to root directory of user's project from source
+        /// </summary>
+        private const string PathToProjectRootFromBin = "../../../";
+
+        /// <summary>
         /// Path to locall install jasmine framework from source
         /// </summary>
-        private const string DefaultPathToJasmine = "/../../../node_modules/jasmine/bin/jasmine.js ";
+        private static readonly string DefaultPathToJasmine = $"{PathToProjectRootFromBin}node_modules/jasmine/bin/jasmine.js ";
 
         /// <summary>
         /// Base uri used by test executor
         /// </summary>
         private const string ExecutorUri = "executor://JasmineTestExecutor/v1";
-        
+
         /// <summary>
         /// Output status message when spec is passed
         /// </summary>
         private const string TestCompleteMessage = "passed";
-        
+
         /// <summary>
         /// Default path to posix shell
         /// </summary>
@@ -84,14 +88,14 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private List<TestCase> DiscoverTests(string source)
         {
-            var jasmineExecutePath = $"{Path.GetDirectoryName(source)}{DefaultPathToJasmine}";
+            var jasmineExecutePath = Path.Combine(Path.GetDirectoryName(source), DefaultPathToJasmine);
             if (!File.Exists(jasmineExecutePath))
             {
                 throw new Exception($"Jasmine executable not found [{jasmineExecutePath}]");
             }
             var completedTestCases = GetTestCasesFromSource().ToList();
             return completedTestCases;
-            
+
             IEnumerable<TestCase> GetTestCasesFromSource()
             {
                 var jasmineResults = GetTestResultsFromJasmine();
@@ -105,7 +109,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                 }
 
                 return testCases;
-                
+
                 //Get test result
                 //Return collection of unit test result. T1 is name of UnitTest, T2 is UnitTest's status
                 IEnumerable<(string, string)> GetTestResultsFromJasmine()
@@ -120,12 +124,14 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                             Arguments = args,
                             RedirectStandardOutput = true,
                             UseShellExecute = false,
-                            CreateNoWindow = true
+                            CreateNoWindow = true,
+                            WorkingDirectory = PathToProjectRootFromBin
                         }
                     };
-                    
+
                     jasmineUnitTesting.Start();
-                    var pipeTask = Task.Run(() => {
+                    var pipeTask = Task.Run(() =>
+                    {
                         using var readerPipe = new NamedPipeServerStream($"{JasminePipeName}{jasmineUnitTesting.Id}");
                         var jasmineOutput = new List<string>();
                         var streamReader = new StreamReader(readerPipe);
@@ -143,7 +149,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                     var jasmineOutputFromPipe = pipeTask.Result;
                     jasmineUnitTesting.WaitForExit();
                     var result = new List<(string, string)>();
-                    for (int i = 0; i < jasmineOutputFromPipe.Count; i+=2)
+                    for (int i = 0; i < jasmineOutputFromPipe.Count; i += 2)
                     {
                         //The file format includes pairs of lines representing specs
                         //(i): spec name, (i + 1): status

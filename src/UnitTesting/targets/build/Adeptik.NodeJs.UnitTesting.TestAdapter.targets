@@ -3,9 +3,9 @@
 	
 	<Target Name="CopyReporter" BeforeTargets="Build">
 		<ItemGroup>
-			<PathToReporters Include="$(MSBuildThisFileDirectory)/../reporters/**\*.*" />
+			<PathToScripts Include="$(MSBuildThisFileDirectory)/../scripts/**\*.*" />
 		</ItemGroup>
-		<Copy SourceFiles="@(PathToReporters)" DestinationFolder="$(TargetDir)\%(RecursiveDir)" SkipUnchangedFiles="true" />
+		<Copy SourceFiles="@(PathToScripts)" DestinationFolder="$(TargetDir)\%(RecursiveDir)" SkipUnchangedFiles="true" />
 	</Target>
 	
 </Project>

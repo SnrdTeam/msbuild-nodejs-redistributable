@@ -1,10 +1,13 @@
+const Jasmine = require("jasmine");
 const net = require('net');
+const process = require("process");
 const os = require('os');
-const process = require('process');
 const PIPE_NAME = 'ReporterJasminePipe' + process.ppid;
 const PIPE_PATH = (os.platform == 'win32' ? '\\\\.\\pipe\\' : '/var/pipes/') + PIPE_NAME;
 
-let stream = net.connect(PIPE_PATH).addListener("close", () => process.exit(0));
+let stream = net.connect(PIPE_PATH).addListener("close", () => process.exit(1));
+let config = process.argv[2];
+let jasmine = new Jasmine();
 
 const MachineReadablePipeReporter = {
     specDone: function (result) {
@@ -20,5 +23,8 @@ const MachineReadablePipeReporter = {
         stream.end();
     }
 };
-jasmine.getEnv().clearReporters();
-jasmine.getEnv().addReporter(MachineReadablePipeReporter);
+
+jasmine.clearReporters();
+jasmine.addReporter(MachineReadablePipeReporter);
+jasmine.loadConfigFile(config);
+jasmine.execute();

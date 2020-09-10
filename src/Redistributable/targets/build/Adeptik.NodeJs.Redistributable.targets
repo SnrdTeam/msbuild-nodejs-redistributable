@@ -56,6 +56,6 @@
   <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallNodeJs" BeforeTargets="Build">
     <GenerateJasmineConfig BuildPath="$(OutDir)"/>
     <WriteLinesToFile File="$(OutDir)jasmine.cmd" Overwrite="true"
-      Lines="$(NodeExecutable) $(ProjectDir)node_modules/jasmine/bin/jasmine.js --config=jasmine.json --reporter=$(TargetDir)MachineReadablePipeReporter.js" />
+      Lines="$(NodeExecutable) $(TargetDir)JasmineExecutor.js $(OutDir)jasmine.json" />
   </Target>
 </Project>

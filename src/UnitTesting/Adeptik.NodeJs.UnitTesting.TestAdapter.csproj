@@ -26,7 +26,7 @@
     <None Include="targets\build\Adeptik.NodeJs.UnitTesting.TestAdapter.targets" Pack="True" PackagePath="build/" />
     <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.UnitTesting.TestAdapter.props" Pack="True" PackagePath="buildMultiTargeting/" />
     <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.UnitTesting.TestAdapter.targets" Pack="True" PackagePath="buildMultiTargeting/" />
-    <None Include="reporters\MachineReadablePipeReporter.js" Pack="True" PackagePath="reporters/" />
+	<None Include="scripts\JasmineExecutor.js" Pack="True" PackagePath="scripts/" />
   </ItemGroup>
 
   <PropertyGroup>

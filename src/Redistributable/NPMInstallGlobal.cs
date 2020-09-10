@@ -2,8 +2,6 @@
 using Microsoft.Build.Utilities;
 using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -54,7 +52,7 @@ namespace Adeptik.NodeJs.Redistributable
             installPackageMutex.WaitOne();
             InstallPackage();
             installPackageMutex.ReleaseMutex();
-            
+
             return !Log.HasLoggedErrors;
 
             void InstallPackage()
@@ -85,19 +83,19 @@ namespace Adeptik.NodeJs.Redistributable
 
                 Log.LogMessage($"Finish installing {fullPackageName}");
 
-                
+
                 (string executable, string arguments) GetExecutingFileNameAndArguments()
                 {
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                         return (NPMExecutable, $"{NPMCommand} {fullPackageName}");
-            
+
                     // In Linux & MacOS NPMExecutable contains path to node & path to npm.js as parameter <see cref="InstallNodeJS"/> 
                     var lastSpaceIdx = NPMExecutable.LastIndexOf(' ');
                     if (lastSpaceIdx == -1)
                         throw new ArgumentException("NPMExecutable value is invalid for current OS.");
 
                     var nodeExecutable = NPMExecutable.Substring(0, lastSpaceIdx);
-                    var npmJSRelPath = NPMExecutable.Substring(lastSpaceIdx+1);
+                    var npmJSRelPath = NPMExecutable.Substring(lastSpaceIdx + 1);
 
                     return (nodeExecutable, $"{npmJSRelPath} {NPMCommand} {fullPackageName}");
                 }
