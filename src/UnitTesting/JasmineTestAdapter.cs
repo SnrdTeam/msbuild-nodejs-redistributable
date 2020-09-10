@@ -39,7 +39,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <summary>
         /// Path to locall install jasmine framework from source
         /// </summary>
-        private static readonly string DefaultPathToJasmine = $"{PathToProjectRootFromBin}node_modules/jasmine/bin/jasmine.js ";
+        private static readonly string DefaultPathToJasmine = $"{PathToProjectRootFromBin}node_modules/jasmine/bin/jasmine.js";
 
         /// <summary>
         /// Base uri used by test executor
