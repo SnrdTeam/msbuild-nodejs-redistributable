@@ -57,9 +57,9 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         private const string DefaultPathToShell = "/bin/sh";
 
         /// <summary>
-        /// File containing commands for the operating system shell
+        /// File containing path to node, path to script for executing jasmine with custom reporter and path to config file
         /// </summary>
-        private const string ShellFile = "jasmine.cmd";
+        private const string JasmineConfigFile = "jasmineConfig";
 
         /// <summary>
         /// Test run is canceled?
@@ -114,38 +114,38 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                 //Return collection of unit test result. T1 is name of UnitTest, T2 is UnitTest's status
                 IEnumerable<(string, string)> GetTestResultsFromJasmine()
                 {
-                    var shellFile = Path.Combine(Directory.GetParent(source).FullName, ShellFile);
                     var (execFile, args) = GetExecutingFileNameAndArguments();
+                    var uniqueIdentificatorForPipe = Guid.NewGuid().ToString();
                     var jasmineUnitTesting = new Process
                     {
                         StartInfo = new ProcessStartInfo
                         {
                             FileName = execFile,
-                            Arguments = args,
+                            Arguments = $"{String.Join(' ', args)} {uniqueIdentificatorForPipe}",
                             RedirectStandardOutput = true,
                             UseShellExecute = false,
                             CreateNoWindow = true,
                             WorkingDirectory = PathToProjectRootFromBin
                         }
                     };
-
-                    jasmineUnitTesting.Start();
                     var pipeTask = Task.Run(() =>
                     {
-                        using var readerPipe = new NamedPipeServerStream($"{JasminePipeName}{jasmineUnitTesting.Id}");
+                        using var readerPipe = new NamedPipeServerStream($"{JasminePipeName}{uniqueIdentificatorForPipe}");
                         var jasmineOutput = new List<string>();
                         var streamReader = new StreamReader(readerPipe);
                         readerPipe.WaitForConnection();
-                        while (readerPipe.IsConnected)
+                        while (true)
                         {
                             var lineFromPipe = streamReader.ReadLine();
-                            if (!String.IsNullOrWhiteSpace(lineFromPipe))
+                            if (String.IsNullOrWhiteSpace(lineFromPipe))
                             {
-                                jasmineOutput.Add(lineFromPipe);
+                                break;
                             }
+                            jasmineOutput.Add(lineFromPipe);
                         }
                         return jasmineOutput;
                     });
+                    jasmineUnitTesting.Start();
                     var jasmineOutputFromPipe = pipeTask.Result;
                     jasmineUnitTesting.WaitForExit();
                     var result = new List<(string, string)>();
@@ -158,10 +158,19 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
                     return result;
 
-                    (string, string) GetExecutingFileNameAndArguments()
-                        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                            ? (shellFile, String.Empty)
-                            : (DefaultPathToShell, shellFile);
+                    (string, List<string>) GetExecutingFileNameAndArguments()
+                    {
+                        var pathToConfigFile = Path.Combine(Directory.GetParent(source).FullName, JasmineConfigFile);
+                        using var configReaderStream = new StreamReader(pathToConfigFile);
+                        var nodeExecuteFilePath = configReaderStream.ReadLine();
+                        var arguments = new List<string>();
+                        string argument;
+                        while ((argument = configReaderStream.ReadLine()) != null)
+                        {
+                            arguments.Add(argument);
+                        }
+                        return (nodeExecuteFilePath, arguments);
+                    }
                 }
             }
         }

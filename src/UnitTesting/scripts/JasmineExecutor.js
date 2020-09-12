@@ -2,11 +2,13 @@ const Jasmine = require("jasmine");
 const net = require('net');
 const process = require("process");
 const os = require('os');
-const PIPE_NAME = 'ReporterJasminePipe' + process.ppid;
+let config = process.argv[2];
+let uniqueGuidIdentificator = process.argv[3];
+const PIPE_NAME = 'ReporterJasminePipe' + uniqueGuidIdentificator;
 const PIPE_PATH = (os.platform == 'win32' ? '\\\\.\\pipe\\' : '/tmp/CoreFxPipe_') + PIPE_NAME;
 
 let stream = net.connect(PIPE_PATH).addListener("close", () => process.exit(1));
-let config = process.argv[2];
+
 let jasmine = new Jasmine();
 
 const MachineReadablePipeReporter = {
