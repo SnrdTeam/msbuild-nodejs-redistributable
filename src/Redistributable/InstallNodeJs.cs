@@ -110,7 +110,7 @@ namespace Adeptik.NodeJs.Redistributable
             string lockfileFilePath;
             Uri distribHashSumUrl;
             Uri distribUrl;
-            using var nodeInstallMutex = new Mutex(false, $@"Global\{NodeJsVersion}");
+            using var nodeInstallMutex = new Mutex(false, $@"Global\NodeJS{NodeJsVersion}");
             try
             {
                 InitPathInfo();
