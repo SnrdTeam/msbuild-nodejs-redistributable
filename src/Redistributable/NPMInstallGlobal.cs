@@ -54,9 +54,10 @@ namespace Adeptik.NodeJs.Redistributable
             if (PackageName == null || string.IsNullOrWhiteSpace(PackageName))
                 throw new ArgumentException("Package name not specified.");
 
-            var fullPackageName = $"{PackageName}@{PackageVersion ?? "latest"}";
+            var versionForInstallation = PackageVersion ?? "latest";
+            var fullPackageName = $"{PackageName}@{versionForInstallation}";
 
-            using var installPackageMutex = new Mutex(false, $@"Global\{PackageName}{PackageVersion}");
+            using var installPackageMutex = new Mutex(false, $@"Global\{PackageName}{versionForInstallation}");
             try
             {
                 installPackageMutex.WaitOne();
