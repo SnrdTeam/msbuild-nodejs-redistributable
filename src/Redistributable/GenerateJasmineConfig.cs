@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Adeptik.NodeJs.Redistributable
 {
@@ -34,20 +33,16 @@ namespace Adeptik.NodeJs.Redistributable
                 return false;
 
             var testFiles = FindTestFilesInBuildFolder().ToArray();
+            var jsonString = $@"{{
+                    ""spec_dir"": ""."",
+                    ""spec_files"": [
+                        {String.Join(",", testFiles.Select(filePath => $@"""{filePath.Replace(@"\", @"\\")}"""))}
+                    ],
+                    ""stopSpecOnExpectationFailure"": ""false"",
+                    ""random"": ""false""
+            }}";
 
-            var jsonStringBuilder = new StringBuilder();
-            jsonStringBuilder.AppendLine("{");
-            jsonStringBuilder.AppendLine("\t\"spec_dir\": \".\",");
-            jsonStringBuilder.AppendLine("\t\"spec_files\": [");
-            for (int testFileIndex = 0; testFileIndex < testFiles.Length; testFileIndex++)
-                jsonStringBuilder.AppendLine($"\t\t\t\"{testFiles[testFileIndex].Replace('\\', '/')}\"" +
-                                             $"{(testFileIndex != testFiles.Length - 1 ? "," : String.Empty)}");
-            jsonStringBuilder.AppendLine("\t\t],");
-            jsonStringBuilder.AppendLine("\t\"stopSpecOnExpectationFailure\": \"false\",");
-            jsonStringBuilder.AppendLine("\t\"random\": \"false\"");
-            jsonStringBuilder.AppendLine("}");
-
-            File.WriteAllText($"{BuildPath}/jasmine.json", jsonStringBuilder.ToString());
+            File.WriteAllText($"{BuildPath}/jasmine.json", jsonString);
 
             return true;
 

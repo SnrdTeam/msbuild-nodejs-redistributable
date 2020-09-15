@@ -7,9 +7,9 @@
     <NodeJsPath></NodeJsPath>
     <GlobalNodeModulesPath></GlobalNodeModulesPath>
     <NodeExecutable></NodeExecutable>
-    <NPMExecutable></NPMExecutable>
+    <NPMScriptPath></NPMScriptPath>
 
-    <YarnExecutable></YarnExecutable>
+    <ExecuteCommandYarn></ExecuteCommandYarn>
   </PropertyGroup>
 
   <!-- Download NodeJS distrib & unpack -->
@@ -19,29 +19,29 @@
       <Output TaskParameter="NodeJsPath" PropertyName="NodeJsPath"/>
       <Output TaskParameter="GlobalNodeModulesPath" PropertyName="GlobalNodeModulesPath"/>
       <Output TaskParameter="NodeExecutable" PropertyName="NodeExecutable"/>
-      <Output TaskParameter="NPMExecutable" PropertyName="NPMExecutable"/>
+      <Output TaskParameter="NPMScriptPath" PropertyName="NPMScriptPath"/>
     </InstallNodeJs>
     <Message Text="Working with NodeJS at $(NodeJsPath)"/>
   </Target>
   
   <!-- Install YARN globally -->
   <Target Name="InstallYarn" DependsOnTargets="InstallNodeJs">
-    <NPMInstallGlobal NPMExecutable="$(NPMExecutable)" PackageName="yarn" PackageVersion="$(YarnVersion)" />
+    <NPMInstallGlobal NPMScriptPath="$(NPMScriptPath)" NodeExecutable="$(NodeExecutable)" PackageName="yarn" PackageVersion="$(YarnVersion)" />
     <PropertyGroup>
-      <YarnExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)/yarn/bin/yarn.js</YarnExecutable>
+      <ExecuteCommandYarn>$(NodeExecutable) $(GlobalNodeModulesPath)/yarn/bin/yarn.js</ExecuteCommandYarn>
     </PropertyGroup>
   </Target>
   
   <!-- Install project packages using yarn -->
   <Target Name="YarnInstall" DependsOnTargets="InstallYarn">
-    <Exec Command="$(YarnExecutable) install"
+    <Exec Command="$(ExecuteCommandYarn) install"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           ConsoleToMSBuild="True" />
   </Target>
 
   <!-- Run yarn command if specified -->
   <Target Name="YarnRun" DependsOnTargets="YarnInstall"  BeforeTargets="CoreCompile" Condition="'$(YarnBuildCommand)' != '' ">
-    <Exec Command="$(YarnExecutable) $(YarnBuildCommand)"
+    <Exec Command="$(ExecuteCommandYarn) $(YarnBuildCommand)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           ConsoleToMSBuild="True" />
   </Target>
@@ -55,9 +55,6 @@
   <!-- Generate Jasmine test run config for shell -->
   <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallNodeJs" BeforeTargets="Build">
     <GenerateJasmineConfig BuildPath="$(OutDir)"/>
-    <WriteLinesToFile File="$(OutDir)jasmineConfig" Overwrite="true"
-      Lines="$(NodeExecutable)
-      $(TargetDir)JasmineExecutor.js
-      $(OutDir)jasmine.json" />
+    <WriteLinesToFile File="$(OutDir).execCfg.json" Overwrite="true" Lines="{&quot;NodeExecuteFile&quot;:&quot;$([MSBuild]::Escape('$(NodeExecutable.Replace('\', '\\'))'))&quot;,;&quot;JasmineLauncher&quot;:&quot;$([MSBuild]::Escape('$(TargetDir.Replace('\', '\\'))JasmineExecutor.js'))&quot;,;&quot;JasmineConfig&quot;:&quot;$([MSBuild]::Escape('$(OutDir.Replace('\', '\\'))jasmine.json'))&quot;}" />
   </Target>
 </Project>

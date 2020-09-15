@@ -88,7 +88,7 @@ namespace Adeptik.NodeJs.Redistributable
         /// Returns commandline to run npm
         /// </summary>
         [Output]
-        public string? NPMExecutable { get; private set; }
+        public string? NPMScriptPath { get; private set; }
 
         private const string NodeUrl = "https://nodejs.org/download/release";
 
@@ -146,7 +146,7 @@ namespace Adeptik.NodeJs.Redistributable
                 distribFileName = $"{distribName}.{(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "zip" : "tar.gz")}";
                 distribFilePath = Path.Combine(workingDirectory.FullName, distribFileName);
                 nodeDirectoryPath = Path.Combine(workingDirectory.FullName, distribName);
-                lockfileFilePath = Path.Combine(nodeDirectoryPath, $"{GetDistribName()}.lock");
+                lockfileFilePath = Path.Combine(nodeDirectoryPath, $"{distribName}.lock");
 
                 distribHashSumUrl = new Uri($"{NodeUrl}/v{NodeJsVersion}/SHASUMS256.txt");
                 distribUrl = new Uri($"{NodeUrl}/v{NodeJsVersion}/{distribFileName}");
@@ -186,7 +186,7 @@ namespace Adeptik.NodeJs.Redistributable
                 var fileHashSum = CalculateFileHashSum(distribFilePath).ToLower();
                 Log.LogMessage($"Calcualted hash sum {fileHashSum}.");
 
-                Log.LogMessage($"Downloading NodeJS hash sum file.");
+                Log.LogMessage("Downloading NodeJS hash sum file.");
                 var wellknownHashSum = GetWellknownHashSum(distribFileName.ToLower(), distribHashSumUrl);
                 Log.LogMessage($"Found hash sum {wellknownHashSum}.");
 
@@ -296,13 +296,13 @@ namespace Adeptik.NodeJs.Redistributable
                 {
                     GlobalNodeModulesPath = Path.Combine(NodeJsPath, "node_modules");
                     NodeExecutable = Path.Combine(NodeJsPath, "node.exe");
-                    NPMExecutable = Path.Combine(NodeJsPath, "npm.cmd");
+                    NPMScriptPath = Path.Combine(NodeJsPath, "node_modules/npm/bin/npm-cli.js");
                 }
                 else
                 {
                     GlobalNodeModulesPath = Path.Combine(NodeJsPath, "lib", "node_modules");
                     NodeExecutable = Path.Combine(NodeJsPath, "bin", "node");
-                    NPMExecutable = $"{NodeExecutable} {Path.Combine(NodeJsPath, "lib/node_modules/npm/bin/npm-cli.js")}";
+                    NPMScriptPath = $"{Path.Combine(NodeJsPath, "lib/node_modules/npm/bin/npm-cli.js")}";
                 }
             }
         }

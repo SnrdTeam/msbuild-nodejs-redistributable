@@ -95,10 +95,11 @@ Example of jasmine.json configuration:
 ```json
 {
 	"spec_dir": ".",
-	"spec_files": [
-			"/path/to/out/dir/fail.test.js",
-			"/path/to/out/dir/simple.test.js"
-		],
+    "spec_files": 
+    [
+        "/path/to/out/dir/fail.test.js",
+        "/path/to/out/dir/simple.test.js"
+    ],
 	"stopSpecOnExpectationFailure": "false",
 	"random": "false"
 }

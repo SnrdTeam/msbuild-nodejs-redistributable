@@ -8,8 +8,9 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Adeptik.NodeJs.UnitTesting.TestAdapter.Data;
 
 namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 {
@@ -52,14 +53,9 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         private const string TestCompleteMessage = "passed";
 
         /// <summary>
-        /// Default path to posix shell
-        /// </summary>
-        private const string DefaultPathToShell = "/bin/sh";
-
-        /// <summary>
         /// File containing path to node, path to script for executing jasmine with custom reporter and path to config file
         /// </summary>
-        private const string JasmineConfigFile = "jasmineConfig";
+        private const string ExecutionConfig = ".execCfg.json";
 
         /// <summary>
         /// Test run is canceled?
@@ -121,7 +117,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                         StartInfo = new ProcessStartInfo
                         {
                             FileName = execFile,
-                            Arguments = $"{String.Join(' ', args)} {uniqueIdentificatorForPipe}",
+                            Arguments = $"{args} {uniqueIdentificatorForPipe}",
                             RedirectStandardOutput = true,
                             UseShellExecute = false,
                             CreateNoWindow = true,
@@ -158,18 +154,11 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
                     return result;
 
-                    (string, List<string>) GetExecutingFileNameAndArguments()
+                    (string? NodeExecuteFile, string) GetExecutingFileNameAndArguments()
                     {
-                        var pathToConfigFile = Path.Combine(Directory.GetParent(source).FullName, JasmineConfigFile);
-                        using var configReaderStream = new StreamReader(pathToConfigFile);
-                        var nodeExecuteFilePath = configReaderStream.ReadLine();
-                        var arguments = new List<string>();
-                        string argument;
-                        while ((argument = configReaderStream.ReadLine()) != null)
-                        {
-                            arguments.Add(argument);
-                        }
-                        return (nodeExecuteFilePath, arguments);
+                        var jsonTextFromConfigFile = File.ReadAllText(Path.Combine(Directory.GetParent(source).FullName, ExecutionConfig));
+                        var config = JsonSerializer.Deserialize<ExecuteConfig>(jsonTextFromConfigFile);
+                        return (config.NodeExecuteFile, $"{config.JasmineLauncher} {config.JasmineConfig}");
                     }
                 }
             }

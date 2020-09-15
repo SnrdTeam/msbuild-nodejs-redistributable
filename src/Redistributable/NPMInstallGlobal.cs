@@ -2,7 +2,6 @@
 using Microsoft.Build.Utilities;
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Adeptik.NodeJs.Redistributable
@@ -11,11 +10,17 @@ namespace Adeptik.NodeJs.Redistributable
     public class NPMInstallGlobal : Task
     {
         /// <summary>
-        /// Required command to execute npm
+        /// Required command to execute node
         /// </summary>
         [Required]
-        public string? NPMExecutable { get; set; }
-
+        public string? NodeExecutable { get; set; }
+        
+        /// <summary>
+        /// Path to npm-cli.js
+        /// </summary>
+        [Required]
+        public string? NPMScriptPath { get; set; }
+        
         /// <summary>
         /// Required jasmine version
         /// </summary>
@@ -34,25 +39,33 @@ namespace Adeptik.NodeJs.Redistributable
         private const string NPMCommand = "install -g";
 
         /// <summary>
-        /// Waiting time for executable process
+        /// Waiting time for executable process in milliseconds
         /// </summary>
         private const int WaitingTime = 60000;
 
         public override bool Execute()
         {
-            if (NPMExecutable == null || string.IsNullOrWhiteSpace(NPMExecutable))
-                throw new ArgumentException("Path to npm executable is not specified.");
-
+            if (NodeExecutable == null || string.IsNullOrWhiteSpace(NodeExecutable))
+                throw new ArgumentException("Path to node executable is not specified.");
+            
+            if(NPMScriptPath == null || string.IsNullOrWhiteSpace(NPMScriptPath))
+                throw new ArgumentException("Path to npm-cli.js script is not specified.");
+            
             if (PackageName == null || string.IsNullOrWhiteSpace(PackageName))
                 throw new ArgumentException("Package name not specified.");
 
             var fullPackageName = $"{PackageName}@{PackageVersion ?? "latest"}";
 
             using var installPackageMutex = new Mutex(false, $@"Global\{PackageName}{PackageVersion}");
-            installPackageMutex.WaitOne();
-            InstallPackage();
-            installPackageMutex.ReleaseMutex();
-
+            try
+            {
+                installPackageMutex.WaitOne();
+                InstallPackage();
+            }
+            finally
+            {
+                installPackageMutex.ReleaseMutex();
+            }
             return !Log.HasLoggedErrors;
 
             void InstallPackage()
@@ -85,20 +98,8 @@ namespace Adeptik.NodeJs.Redistributable
 
 
                 (string executable, string arguments) GetExecutingFileNameAndArguments()
-                {
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        return (NPMExecutable, $"{NPMCommand} {fullPackageName}");
-
-                    // In Linux & MacOS NPMExecutable contains path to node & path to npm.js as parameter <see cref="InstallNodeJS"/> 
-                    var lastSpaceIdx = NPMExecutable.LastIndexOf(' ');
-                    if (lastSpaceIdx == -1)
-                        throw new ArgumentException("NPMExecutable value is invalid for current OS.");
-
-                    var nodeExecutable = NPMExecutable.Substring(0, lastSpaceIdx);
-                    var npmJSRelPath = NPMExecutable.Substring(lastSpaceIdx + 1);
-
-                    return (nodeExecutable, $"{npmJSRelPath} {NPMCommand} {fullPackageName}");
-                }
+                    => (NodeExecutable, $"{NPMScriptPath} {NPMCommand} {fullPackageName}");
+                
 
             }
 

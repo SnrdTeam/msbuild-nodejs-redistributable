@@ -1,7 +1,10 @@
-const Jasmine = require("jasmine");
+const Jasmine = require('jasmine');
 const net = require('net');
-const process = require("process");
+const process = require('process');
 const os = require('os');
+String.prototype.replaceAt = function(index, replacement) {
+    return this.substr(0, index) + replacement + this.substr(index + replacement.length);
+}
 let config = process.argv[2];
 let uniqueGuidIdentificator = process.argv[3];
 const PIPE_NAME = 'ReporterJasminePipe' + uniqueGuidIdentificator;
@@ -13,11 +16,9 @@ let jasmine = new Jasmine();
 
 const MachineReadablePipeReporter = {
     specDone: function (result) {
-        //Insert dot between construction's name
-        //Delete trailing spaces and replace remain spaces with underscores
-        let suits = result.fullName.replace(result.description, ' ').trim().replace(/ /g, '_').replace(/\n/g, '');
-        let spec = result.description.trim().replace(/ /g, '_').replace(/\n/g, '');
-        stream.write(suits + '.' + spec + os.EOL);
+        //Insert dot between suits and spec name. And replace all spaces symbols on underline char
+        let name = result.fullName.replaceAt(result.fullName.indexOf(result.description) - 1, '.').replace(/\s+/g, '_');
+        stream.write(name + os.EOL);
         stream.write(result.status + os.EOL);
     },
 
