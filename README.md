@@ -1,6 +1,6 @@
 # Preamble
 
-***To solve the customization and update of the client-side codebase. 
+***To solve the customization and update of the codebase. 
 To UnitTest the javascript codebase.***
 
 This repository contains two packages. 
