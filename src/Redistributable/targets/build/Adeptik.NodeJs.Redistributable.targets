@@ -52,9 +52,8 @@
     <CoreCompileDependsOn>$(CoreCompileDependsOn);YarnRun</CoreCompileDependsOn>
   </PropertyGroup>
 
-  <!-- Generate Jasmine test run config for shell -->
+  <!-- Generate Jasmine test run config for shell and Jasmine launch settings -->
   <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallNodeJs" BeforeTargets="Build">
-    <GenerateJasmineConfig BuildPath="$(OutDir)"/>
-    <WriteLinesToFile File="$(OutDir).execCfg.json" Overwrite="true" Lines="{&quot;NodeExecuteFile&quot;:&quot;$([MSBuild]::Escape('$(NodeExecutable.Replace('\', '\\'))'))&quot;,;&quot;JasmineLauncher&quot;:&quot;$([MSBuild]::Escape('$(TargetDir.Replace('\', '\\'))JasmineExecutor.js'))&quot;,;&quot;JasmineConfig&quot;:&quot;$([MSBuild]::Escape('$(OutDir.Replace('\', '\\'))jasmine.json'))&quot;}" />
+    <GenerateJasmineConfig OutDir="$(OutDir)" NodeExecutable="$(NodeExecutable)"/>
   </Target>
 </Project>

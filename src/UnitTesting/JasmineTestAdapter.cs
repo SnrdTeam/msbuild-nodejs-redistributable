@@ -55,7 +55,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         /// <summary>
         /// File containing path to node, path to script for executing jasmine with custom reporter and path to config file
         /// </summary>
-        private const string ExecutionConfig = ".execCfg.json";
+        private const string ExecutionConfig = ".jasmineLaunchSettings.json";
 
         /// <summary>
         /// Test run is canceled?
