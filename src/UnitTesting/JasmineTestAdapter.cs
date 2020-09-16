@@ -94,13 +94,14 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
             IEnumerable<TestCase> GetTestCasesFromSource()
             {
-                var jasmineResults = GetTestResultsFromJasmine();
+                var specs = GetTestResultsFromJasmine();
                 var testCases = new List<TestCase>();
-                foreach (var (name, status) in jasmineResults)
+                foreach (var spec in specs)
                 {
-                    var testCase = new TestCase(name, new Uri(ExecutorUri), source);
+                    var testCase = new TestCase(spec.FullName, new Uri(ExecutorUri), source);
                     testCase.SetPropertyValue(TestResultProperties.Outcome,
-                        status == TestCompleteMessage ? TestOutcome.Passed : TestOutcome.Failed);
+                        spec.Status == TestCompleteMessage ? TestOutcome.Passed : TestOutcome.Failed);
+                    testCase.SetPropertyValue(TestResultProperties.Duration, TimeSpan.FromMilliseconds(spec.Duration ?? 0));
                     testCases.Add(testCase);
                 }
 
@@ -108,7 +109,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
                 //Get test result
                 //Return collection of unit test result. T1 is name of UnitTest, T2 is UnitTest's status
-                IEnumerable<(string, string)> GetTestResultsFromJasmine()
+                IEnumerable<SpecResult> GetTestResultsFromJasmine()
                 {
                     var (execFile, args) = GetExecutingFileNameAndArguments();
                     var uniqueIdentificatorForPipe = Guid.NewGuid().ToString();
@@ -127,7 +128,7 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                     var pipeTask = Task.Run(() =>
                     {
                         using var readerPipe = new NamedPipeServerStream($"{JasminePipeName}{uniqueIdentificatorForPipe}");
-                        var jasmineOutput = new List<string>();
+                        var specsFormJasmineOutput = new List<SpecResult>();
                         var streamReader = new StreamReader(readerPipe);
                         readerPipe.WaitForConnection();
                         while (true)
@@ -137,22 +138,15 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                             {
                                 break;
                             }
-                            jasmineOutput.Add(lineFromPipe);
+                            specsFormJasmineOutput.Add(JsonSerializer.Deserialize<SpecResult>(lineFromPipe));
                         }
-                        return jasmineOutput;
+                        return specsFormJasmineOutput;
                     });
                     jasmineUnitTesting.Start();
-                    var jasmineOutputFromPipe = pipeTask.Result;
+                    var specs = pipeTask.Result;
                     jasmineUnitTesting.WaitForExit();
-                    var result = new List<(string, string)>();
-                    for (int i = 0; i < jasmineOutputFromPipe.Count; i += 2)
-                    {
-                        //The file format includes pairs of lines representing specs
-                        //(i): spec name, (i + 1): status
-                        result.Add((jasmineOutputFromPipe[i], jasmineOutputFromPipe[i + 1]));
-                    }
 
-                    return result;
+                    return specs;
 
                     (string? NodeExecuteFile, string) GetExecutingFileNameAndArguments()
                     {
@@ -207,7 +201,8 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
                 var testResult = new TestResult(test)
                 {
-                    Outcome = (TestOutcome)test.GetPropertyValue(TestResultProperties.Outcome)
+                    Outcome = (TestOutcome)test.GetPropertyValue(TestResultProperties.Outcome),
+                    Duration = (TimeSpan)test.GetPropertyValue(TestResultProperties.Duration)
                 };
                 frameworkHandle.RecordResult(testResult);
             }
