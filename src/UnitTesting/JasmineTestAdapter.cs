@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Adeptik.NodeJs.UnitTesting.TestAdapter.Data;
@@ -33,15 +34,15 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         private const string JasminePipeName = "ReporterJasminePipe";
 
         /// <summary>
-        /// Path to root directory of user's project from source
+        /// Relative path to locall install jasmine framework from source
         /// </summary>
-        private const string PathToProjectRootFromBin = "../../../";
-
+        private static readonly string RelativeDefaultPathToJasmine = "node_modules/jasmine/bin/jasmine.js";
+        
         /// <summary>
-        /// Path to locall install jasmine framework from source
+        /// End of text character
         /// </summary>
-        private static readonly string DefaultPathToJasmine = $"{PathToProjectRootFromBin}node_modules/jasmine/bin/jasmine.js";
-
+        private const char EndOfText = (char)3;
+        
         /// <summary>
         /// Base uri used by test executor
         /// </summary>
@@ -84,7 +85,13 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
         private List<TestCase> DiscoverTests(string source)
         {
-            var jasmineExecutePath = Path.Combine(Path.GetDirectoryName(source), DefaultPathToJasmine);
+            var jsonTextFromConfigFile = File.ReadAllText(Path.Combine(Directory.GetParent(source).FullName, ExecutionConfig));
+            var config = JsonSerializer.Deserialize<ExecuteConfig>(jsonTextFromConfigFile);
+            if (config.WorkingDirectory == null)
+            {
+                throw new NullReferenceException("Path to the working directory equal null");
+            }
+            var jasmineExecutePath = Path.Combine(config.WorkingDirectory, RelativeDefaultPathToJasmine);
             if (!File.Exists(jasmineExecutePath))
             {
                 throw new Exception($"Jasmine executable not found [{jasmineExecutePath}]");
@@ -122,19 +129,19 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                             RedirectStandardOutput = true,
                             UseShellExecute = false,
                             CreateNoWindow = true,
-                            WorkingDirectory = PathToProjectRootFromBin
+                            WorkingDirectory = config.WorkingDirectory
                         }
                     };
                     var pipeTask = Task.Run(() =>
                     {
                         using var readerPipe = new NamedPipeServerStream($"{JasminePipeName}{uniqueIdentificatorForPipe}");
                         var specsFormJasmineOutput = new List<SpecResult>();
-                        var streamReader = new StreamReader(readerPipe);
+                        var streamReader = new StreamReader(readerPipe, Encoding.UTF8);
                         readerPipe.WaitForConnection();
                         while (true)
                         {
                             var lineFromPipe = streamReader.ReadLine();
-                            if (String.IsNullOrWhiteSpace(lineFromPipe))
+                            if (lineFromPipe == EndOfText.ToString())
                             {
                                 break;
                             }
@@ -150,8 +157,6 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
 
                     (string? NodeExecuteFile, string) GetExecutingFileNameAndArguments()
                     {
-                        var jsonTextFromConfigFile = File.ReadAllText(Path.Combine(Directory.GetParent(source).FullName, ExecutionConfig));
-                        var config = JsonSerializer.Deserialize<ExecuteConfig>(jsonTextFromConfigFile);
                         return (config.NodeExecuteFile, $"{config.JasmineLauncher} {config.JasmineConfig}");
                     }
                 }

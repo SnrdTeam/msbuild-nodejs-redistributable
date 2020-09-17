@@ -39,6 +39,12 @@ namespace Adeptik.NodeJs.Redistributable
         public string? OutDir { get; set; }
         
         /// <summary>
+        /// Path to project directory
+        /// </summary>
+        [Required]
+        public string? ProjectDir { get; set; }
+        
+        /// <summary>
         /// Path to execute file NodeJS
         /// </summary>
         [Required]
@@ -69,7 +75,8 @@ namespace Adeptik.NodeJs.Redistributable
             var jsonLaunchSettings = $@"{{
                     ""NodeExecuteFile"": ""{NodeExecutable}"",
                     ""JasmineLauncher"": ""{$"{Path.Combine(OutDir, JasmineLauncher)}"}"",
-                    ""JasmineConfig"": ""{configJasminePath}""
+                    ""JasmineConfig"": ""{configJasminePath}"",
+                    ""WorkingDirectory"": ""{ProjectDir}""
             }}".Replace("\\", "/");
             
             File.WriteAllText(Path.Combine(OutDir, JasmineLaunchSettings), jsonLaunchSettings);

@@ -16,12 +16,13 @@ let jasmine = new Jasmine();
 
 const MachineReadablePipeReporter = {
     specDone: function (result) {
-        //Insert dot between suits and spec name. And replace all spaces symbols on underline char
-        result.fullName = result.fullName.replaceAt(result.fullName.indexOf(result.description) - 1, '.').replace(/\s+/g, '_');
+        //Default write UTF-8
         stream.write(JSON.stringify(result) + os.EOL);
     },
 
     jasmineDone: function (result) {
+        //End of text char
+        stream.write(String.fromCharCode(3));
         stream.end();
     }
 };

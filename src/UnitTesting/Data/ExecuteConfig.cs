@@ -11,5 +11,6 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter.Data
         public string? NodeExecuteFile { get; set; }
         public string? JasmineLauncher { get; set; }
         public string? JasmineConfig { get; set; }
+        public string? WorkingDirectory { get; set; }
     }
 }
