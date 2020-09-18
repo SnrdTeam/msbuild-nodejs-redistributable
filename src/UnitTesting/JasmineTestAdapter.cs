@@ -39,9 +39,9 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         private static readonly string RelativeDefaultPathToJasmine = "node_modules/jasmine/bin/jasmine.js";
         
         /// <summary>
-        /// End of text character
+        /// Not UTF-8 char
         /// </summary>
-        private const char EndOfText = (char)3;
+        private const char NotUTF8Char = (char)0b11111111_11111111;
         
         /// <summary>
         /// Base uri used by test executor
@@ -147,13 +147,9 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                         var specsFormJasmineOutput = new List<SpecResult>();
                         var streamReader = new StreamReader(readerPipe, Encoding.UTF8);
                         readerPipe.WaitForConnection();
-                        while (true)
+                        string lineFromPipe;
+                        while ((lineFromPipe = streamReader.ReadLine()) != NotUTF8Char.ToString())
                         {
-                            var lineFromPipe = streamReader.ReadLine();
-                            if (lineFromPipe == EndOfText.ToString())
-                            {
-                                break;
-                            }
                             try
                             {
                                 specsFormJasmineOutput.Add(JsonSerializer.Deserialize<SpecResult>(lineFromPipe));

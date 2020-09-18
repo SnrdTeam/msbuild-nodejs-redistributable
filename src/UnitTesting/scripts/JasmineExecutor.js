@@ -17,12 +17,12 @@ let jasmine = new Jasmine();
 const MachineReadablePipeReporter = {
     specDone: function (result) {
         //Default write UTF-8
-        stream.write(JSON.stringify(result) + os.EOL);
+        stream.write(JSON.stringify(result, null, 0) + os.EOL, 'utf8');
     },
 
     jasmineDone: function (result) {
         //End of text char
-        stream.write(String.fromCharCode(3));
+        stream.write(String.fromCharCode(0b11111111_11111111));
         stream.end();
     }
 };
