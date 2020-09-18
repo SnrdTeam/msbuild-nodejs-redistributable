@@ -86,7 +86,16 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
         private List<TestCase> DiscoverTests(string source)
         {
             var jsonTextFromConfigFile = File.ReadAllText(Path.Combine(Directory.GetParent(source).FullName, ExecutionConfig));
-            var config = JsonSerializer.Deserialize<ExecuteConfig>(jsonTextFromConfigFile);
+            ExecuteConfig config;
+            try
+            {
+                config = JsonSerializer.Deserialize<ExecuteConfig>(jsonTextFromConfigFile);
+            }
+            catch (JsonException e)
+            {
+                throw new FormatException($"{ExecutionConfig} file is not in the correct format", e);
+            }
+            
             if (config.WorkingDirectory == null)
             {
                 throw new NullReferenceException("Path to the working directory equal null");
@@ -145,7 +154,14 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter
                             {
                                 break;
                             }
-                            specsFormJasmineOutput.Add(JsonSerializer.Deserialize<SpecResult>(lineFromPipe));
+                            try
+                            {
+                                specsFormJasmineOutput.Add(JsonSerializer.Deserialize<SpecResult>(lineFromPipe));
+                            }
+                            catch (JsonException e)
+                            {
+                                throw new FormatException($"{lineFromPipe} is not a valid string", e);
+                            }
                         }
                         return specsFormJasmineOutput;
                     });

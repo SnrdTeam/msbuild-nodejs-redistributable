@@ -53,7 +53,7 @@
   </PropertyGroup>
 
   <!-- Generate Jasmine test run config for shell and Jasmine launch settings -->
-  <Target Name="GenerateJasmineConfigAndStartup" DependsOnTargets="InstallNodeJs" BeforeTargets="Build">
+  <Target Name="GenerateJasmineConfigurationAndLaunchSettingsFile" DependsOnTargets="InstallNodeJs" BeforeTargets="Build">
     <GenerateJasmineConfig OutDir="$(OutDir)" ProjectDir="$(ProjectDir)" NodeExecutable="$(NodeExecutable)"/>
   </Target>
 </Project>
