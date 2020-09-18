@@ -21,8 +21,8 @@ const MachineReadablePipeReporter = {
     },
 
     jasmineDone: function (result) {
-        //End of text char
-        stream.write(String.fromCharCode(0b11111111_11111111));
+        //Write NULL character
+        stream.write(String.fromCharCode(0) + os.EOL);
         stream.end();
     }
 };

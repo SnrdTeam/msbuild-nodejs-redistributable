@@ -19,6 +19,6 @@ namespace Adeptik.NodeJs.UnitTesting.TestAdapter.Data
         public string? Stack { get; set; }
         
         [JsonPropertyName("passed")]
-        public bool Passed { get; set; }
+        public bool? Passed { get; set; }
     }
 }
