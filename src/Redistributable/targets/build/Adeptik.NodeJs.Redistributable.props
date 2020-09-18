@@ -7,8 +7,11 @@
     <NodeJsDistVersion Condition="'$(NodeJsDistVersion)' == ''"></NodeJsDistVersion>
     <YarnVersion Condition="'$(YarnVersion)' == ''">latest</YarnVersion>    
     <YarnBuildCommand Condition="'$(YarnBuildCommand)' == ''"></YarnBuildCommand>
+    <JasmineVersion Condition="'$(JasmineVersion)' == ''"></JasmineVersion>
   </PropertyGroup>
 
   <!-- Register Task -->
   <UsingTask AssemblyFile="..\tools\netstandard1.5\Adeptik.NodeJs.Redistributable.dll" TaskName="Adeptik.NodeJs.Redistributable.InstallNodeJs" />
+  <UsingTask AssemblyFile="..\tools\netstandard1.5\Adeptik.NodeJs.Redistributable.dll" TaskName="Adeptik.NodeJs.Redistributable.NPMInstallGlobal" />
+  <UsingTask AssemblyFile="..\tools\netstandard1.5\Adeptik.NodeJs.Redistributable.dll" TaskName="Adeptik.NodeJs.Redistributable.GenerateJasmineConfig" />
 </Project>

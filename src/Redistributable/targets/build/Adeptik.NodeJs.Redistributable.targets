@@ -7,11 +7,11 @@
     <NodeJsPath></NodeJsPath>
     <GlobalNodeModulesPath></GlobalNodeModulesPath>
     <NodeExecutable></NodeExecutable>
-    <NPMExecutable></NPMExecutable>
-    
-    <YarnExecutable></YarnExecutable>
+    <NPMScriptPath></NPMScriptPath>
+
+    <ExecuteCommandYarn></ExecuteCommandYarn>
   </PropertyGroup>
-  
+
   <!-- Download NodeJS distrib & unpack -->
   <Target Name="InstallNodeJs">
     <Error Text="NodeJsDistVersion property not set." Condition="'$(NodeJsDistVersion)' == ''" />
@@ -19,32 +19,29 @@
       <Output TaskParameter="NodeJsPath" PropertyName="NodeJsPath"/>
       <Output TaskParameter="GlobalNodeModulesPath" PropertyName="GlobalNodeModulesPath"/>
       <Output TaskParameter="NodeExecutable" PropertyName="NodeExecutable"/>
-      <Output TaskParameter="NPMExecutable" PropertyName="NPMExecutable"/>
+      <Output TaskParameter="NPMScriptPath" PropertyName="NPMScriptPath"/>
     </InstallNodeJs>
     <Message Text="Working with NodeJS at $(NodeJsPath)"/>
   </Target>
-
-  <!-- Install yarn using NPM -->
+  
+  <!-- Install YARN globally -->
   <Target Name="InstallYarn" DependsOnTargets="InstallNodeJs">
-    <Exec Command="$(NPMExecutable) install -g yarn@$(YarnVersion)"
-          WorkingDirectory="$(NodeJsPath)"
-          ConsoleToMSBuild="True"
-    />
+    <NPMInstallGlobal NPMScriptPath="$(NPMScriptPath)" NodeExecutable="$(NodeExecutable)" PackageName="yarn" PackageVersion="$(YarnVersion)" />
     <PropertyGroup>
-      <YarnExecutable>$(NodeExecutable) $(GlobalNodeModulesPath)/yarn/bin/yarn.js</YarnExecutable>
+      <ExecuteCommandYarn>$(NodeExecutable) $(GlobalNodeModulesPath)/yarn/bin/yarn.js</ExecuteCommandYarn>
     </PropertyGroup>
   </Target>
-
+  
   <!-- Install project packages using yarn -->
   <Target Name="YarnInstall" DependsOnTargets="InstallYarn">
-    <Exec Command="$(YarnExecutable) install"
+    <Exec Command="$(ExecuteCommandYarn) install"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           ConsoleToMSBuild="True" />
   </Target>
 
   <!-- Run yarn command if specified -->
   <Target Name="YarnRun" DependsOnTargets="YarnInstall"  BeforeTargets="CoreCompile" Condition="'$(YarnBuildCommand)' != '' ">
-    <Exec Command="$(YarnExecutable) $(YarnBuildCommand)"
+    <Exec Command="$(ExecuteCommandYarn) $(YarnBuildCommand)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           ConsoleToMSBuild="True" />
   </Target>
@@ -55,4 +52,8 @@
     <CoreCompileDependsOn>$(CoreCompileDependsOn);YarnRun</CoreCompileDependsOn>
   </PropertyGroup>
 
+  <!-- Generate Jasmine test run config for shell and Jasmine launch settings -->
+  <Target Name="GenerateJasmineConfigurationAndLaunchSettingsFile" DependsOnTargets="InstallNodeJs" BeforeTargets="Build">
+    <GenerateJasmineConfig OutDir="$(OutDir)" ProjectDir="$(ProjectDir)" NodeExecutable="$(NodeExecutable)"/>
+  </Target>
 </Project>

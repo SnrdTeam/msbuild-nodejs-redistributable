@@ -2,3 +2,9 @@
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your Javascript code.
+
+function add(a, b) {
+    return a + b;
+}
+
+exports.add = add;

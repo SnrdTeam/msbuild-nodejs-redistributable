@@ -3,35 +3,27 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
     <LangVersion>8.0</LangVersion>
-    <SemanticVersion>2.0.3</SemanticVersion>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup>
-    <PreReleaseLabelWithPrefix Condition=" '$(PreReleaseLabel)' != '' ">-$(PreReleaseLabel)</PreReleaseLabelWithPrefix>
-    <BuildMetadataWithPrefix Condition=" '$(BuildMetadata)' != '' ">+$(BuildMetadata)</BuildMetadataWithPrefix>
-    <Version>$(SemanticVersion)$(PreReleaseLabelWithPrefix)$(BuildMetadataWithPrefix)</Version>
-    <AssemblyVersion>$(SemanticVersion)</AssemblyVersion>
-    <FileVersion>$(SemanticVersion)</FileVersion>
+    <VersionPrefix>2.2.0</VersionPrefix>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <PrepareForBuildDependsOn>ValidateSemanticVersion;$(PrepareForBuildDependsOn)</PrepareForBuildDependsOn>
-  </PropertyGroup>
-
-  <Target Name="ValidateSemanticVersion" BeforeTargets="CoreCompile">
-    <!-- Regular expression from https://github.com/semver/semver/issues/232 -->
-    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch($(Version), `^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$`, RegexOptions.None))"
-           Text="Version has invalid format. See https://semver.org" />
-  </Target>
 
   <ItemGroup>
+    <PackageReference Include="Adeptik.SemanticVersion" Version="1.0.0" />
     <PackageReference Include="Microsoft.Build.Framework" Version="15.1.1012" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012" PrivateAssets="All" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />    
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE" Pack="True" PackagePath=""/>
+    <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
+    <None Include="images\icon.png" Pack="true" PackagePath="" />
 
+    <None Include="_._" Pack="True" PackagePath="lib/netstandard1.5/" />
+    
     <None Include="targets\build\Adeptik.NodeJs.Redistributable.props" Pack="True" PackagePath="build/" />
     <None Include="targets\build\Adeptik.NodeJs.Redistributable.targets" Pack="True" PackagePath="build/" />
     <None Include="targets\buildMultiTargeting\Adeptik.NodeJs.Redistributable.props" Pack="True" PackagePath="buildMultiTargeting/" />
@@ -45,7 +37,7 @@
     <RepositoryType>GitHub</RepositoryType>
     <RepositoryUrl>https://github.com/SnrdTeam/msbuild-nodejs-redistributable</RepositoryUrl>
     <Copyright>Copyright © Adeptik LLC</Copyright>
-    <PackageIconUrl>https://raw.githubusercontent.com/SnrdTeam/snrd-icons/master/development-icons/dotnet-icon%4064.png</PackageIconUrl>
+    <PackageIcon>icon.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
   </PropertyGroup>

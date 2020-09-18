@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "name": "asp.net",
+  "private": true,
+  "scripts": {
+    "build": "webpack --config webpack.config.js",
+    "test": "node ./node_modules/jasmine/bin/jasmine.js --helper=./node_modules/ts-node/register/type-check.js ./JsTest/*.*"
+  },
+  "devDependencies": {
+    "webpack": "4.38.0",
+    "webpack-cli": "3.3.6",
+    "jasmine": "3.6.0"
+  }
+}
