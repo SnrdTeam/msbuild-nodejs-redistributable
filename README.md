@@ -18,7 +18,7 @@ MSBuild targets for:
 * [NodeJs installation](#NodeJs-installation)
 * [Yarn installation](#Yarn-installation)
 * [Node modules installation via yarn](#Node-modules-installation-via-yarn)
-* [Run node scripts from package.json via yarn](#Run-node-scripts-from-package.json-via-yarn)
+* [Run node scripts from package.json via yarn](#Run-node-scripts-from-packagejson-via-yarn)
 * [Generate jasmine configuration and launch settings file](#Generate-jasmine-configuration-and-launch-settings-file)
 
 MSBuild tasks:
