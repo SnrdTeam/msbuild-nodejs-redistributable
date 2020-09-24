@@ -38,9 +38,9 @@
           WorkingDirectory="$(MSBuildProjectDirectory)"
           ConsoleToMSBuild="True" />
   </Target>
-
+    
   <!-- Run yarn command if specified -->
-  <Target Name="YarnRun" DependsOnTargets="YarnInstall"  BeforeTargets="CoreCompile" Condition="'$(YarnBuildCommand)' != '' ">
+  <Target Name="YarnRun" DependsOnTargets="YarnInstall" Condition="'$(YarnBuildCommand)' != ''" BeforeTargets="AfterCompile" AfterTargets="BeforeCompile">
     <Exec Command="$(ExecuteCommandYarn) $(YarnBuildCommand)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           ConsoleToMSBuild="True" />
@@ -48,12 +48,11 @@
 
   <!--Setup yarn build dependences-->
   <PropertyGroup>
-    <PrepareForBuildDependsOn>YarnRun;$(PrepareForBuildDependsOn)</PrepareForBuildDependsOn>
     <CoreCompileDependsOn>$(CoreCompileDependsOn);YarnRun</CoreCompileDependsOn>
   </PropertyGroup>
 
   <!-- Generate Jasmine test run config for shell and Jasmine launch settings -->
-  <Target Name="GenerateJasmineConfigurationAndLaunchSettingsFile" DependsOnTargets="InstallNodeJs" BeforeTargets="Build">
+  <Target Name="GenerateJasmineConfigurationAndLaunchSettingsFile" AfterTargets="YarnInstall;$(MSBuildProjectDefaultTargets)" Condition="$(IsTestProject) == true">
     <GenerateJasmineConfig OutDir="$(OutDir)" ProjectDir="$(ProjectDir)" NodeExecutable="$(NodeExecutable)"/>
   </Target>
 </Project>
