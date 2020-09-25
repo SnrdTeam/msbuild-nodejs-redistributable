@@ -52,7 +52,7 @@
   </PropertyGroup>
 
   <!-- Generate Jasmine test run config for shell and Jasmine launch settings -->
-  <Target Name="GenerateJasmineConfigurationAndLaunchSettingsFile" AfterTargets="YarnInstall;$(MSBuildProjectDefaultTargets)" Condition="$(IsTestProject) == true">
+  <Target Name="GenerateJasmineConfigurationAndLaunchSettingsFile" AfterTargets="YarnInstall;$(MSBuildProjectDefaultTargets)"  Condition="'$(IsTestProject)' == 'true'">
     <GenerateJasmineConfig OutDir="$(OutDir)" ProjectDir="$(ProjectDir)" NodeExecutable="$(NodeExecutable)"/>
   </Target>
 </Project>
