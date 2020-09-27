@@ -21,3 +21,7 @@ jobs:
       run: dotnet restore ${{github.workspace}}/src/Redistributable/Adeptik.NodeJs.Redistributable.csproj
     - name: Build NodeJS Redistributable
       run: dotnet build --configuration Release --no-restore ${{github.workspace}}/src/Redistributable/Adeptik.NodeJs.Redistributable.csproj
+    - name: Install dependencies for NodeJS TestAdapter
+      run: dotnet restore ${{github.workspace}}/src/UnitTesting/Adeptik.NodeJs.UnitTesting.TestAdapter.csproj
+    - name: Build NodeJS TestAdapter
+      run: dotnet build --configuration Release --no-restore ${{github.workspace}}/src/UnitTesting/Adeptik.NodeJs.UnitTesting.TestAdapter.csproj
