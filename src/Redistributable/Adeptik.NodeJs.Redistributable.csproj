@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VersionPrefix>2.2.1</VersionPrefix>
+    <VersionPrefix>2.3.0</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
