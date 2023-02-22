@@ -8,7 +8,7 @@
     <YarnVersion Condition="'$(YarnVersion)' == ''">latest</YarnVersion>    
     <YarnBuildCommand Condition="'$(YarnBuildCommand)' == ''"></YarnBuildCommand>
     <PackageJsonPath Condition="'$(PackageJsonPath)' == ''"></PackageJsonPath>
-	<JasmineVersion Condition="'$(JasmineVersion)' == ''"></JasmineVersion>
+    <JasmineVersion Condition="'$(JasmineVersion)' == ''"></JasmineVersion>
   </PropertyGroup>
 
   <!-- Register Task -->
