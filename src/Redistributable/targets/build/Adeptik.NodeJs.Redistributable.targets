@@ -35,14 +35,14 @@
   <!-- Install project packages using yarn -->
   <Target Name="YarnInstall" DependsOnTargets="InstallYarn">
     <Exec Command="$(ExecuteCommandYarn) install"
-          WorkingDirectory="$(MSBuildProjectDirectory)"
+          WorkingDirectory="$(MSBuildProjectDirectory)$(PackageJsonPath)"
           ConsoleToMSBuild="True" />
   </Target>
     
   <!-- Run yarn command if specified -->
   <Target Name="YarnRun" DependsOnTargets="YarnInstall" Condition="'$(YarnBuildCommand)' != ''" BeforeTargets="AfterCompile" AfterTargets="BeforeCompile">
     <Exec Command="$(ExecuteCommandYarn) $(YarnBuildCommand)"
-          WorkingDirectory="$(MSBuildProjectDirectory)"
+          WorkingDirectory="$(MSBuildProjectDirectory)$(PackageJsonPath)"
           ConsoleToMSBuild="True" />
   </Target>
 

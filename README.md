@@ -37,11 +37,11 @@ Supports Windows, Linux & MacOS.
 
 Install Adeptik.NodeJs.Redistributable package from Nuget
 
-    Install-Package Adeptik.NodeJs.Redistributable -Version 2.2.0
+    Install-Package Adeptik.NodeJs.Redistributable -Version 2.3.0
 
 or add in your .csproj:
 
-    <PackageReference Include="Adeptik.NodeJs.Redistributable" Version="2.2.0" />
+    <PackageReference Include="Adeptik.NodeJs.Redistributable" Version="2.3.0" />
 
 ### NodeJs installation
 
@@ -82,6 +82,9 @@ Yarn command stored to `$(YarnExecutable)` property.
 ### Node modules installation via Yarn
 
 You can install node modules (listed in package.json file in the root of your project) using yarn package manager in your target by setting target's `DependsOn` attribute to `YarnInstall`. YarnInstall target depends on InstallYarn target.
+
+### Specify package.json location
+You can specify package.json directory relative to project root via the `$(PackageJsonPath)` property, omitting it will default to `$(MSBuildProjectDirectory)`. Must start with a slash.
 
 ### Run node scripts from package.json via Yarn
 
